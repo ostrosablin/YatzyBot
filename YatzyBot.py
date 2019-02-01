@@ -310,7 +310,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('move', commit))
     updater.dispatcher.add_handler(CommandHandler('score', score))
     updater.dispatcher.add_handler(CommandHandler('score_all', score_all))
-    updater.dispatcher.add_handler(CommandHandler(['1', '2', '3', '4', '5', 'dr', 'rr'], reroll_process))
+    updater.dispatcher.add_handler(CommandHandler(['1', '2', '3', '4', '5', 'dr', 'rr', 'sa'], reroll_process))
     updater.dispatcher.add_handler(
         CommandHandler(
             ['on', 'ac', 'tw', 'th', 'fo', 'fi', 'si', 'op', 'tp', 'tk', 'fk', 'fh', 'ss', 'ls', 'ch', 'ya', 'yh'],
