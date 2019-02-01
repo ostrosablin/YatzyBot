@@ -172,6 +172,14 @@ def roll(bot, update):
 def reroll(bot, update):
     if not chk_game_runs(update):
         return
+    player = gamemanager.player(update.message.from_user)
+    try:
+        gamemanager.game(update.message.chat).chk_command_usable(player)
+        if not gamemanager.game(update.message.chat).hand:
+            raise PlayerError("Cannot reroll - you didn't roll a hand yet")
+    except PlayerError as e:
+        update.message.reply_text(str(e), quote=False)
+        return
     msg = "Reroll menu:\n\n{0}\n\n/rr - Reset reroll.\n\n/1 - Toggle reroll first dice.\n\n" \
           "/2 - Toggle reroll second dice.\n\n/3 - Toggle reroll third dice.\n\n/4 - Toggle reroll fourth dice.\n\n" \
           "/5 - Toggle reroll fifth dice.\n\n/sa - Select all.\n\n/dr - Do reroll.\n\n" \
