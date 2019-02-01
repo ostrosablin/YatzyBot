@@ -248,7 +248,8 @@ def commit_move(bot, update):
             'The game has ended! Final scores:\n\n{0}'.format(gamemanager.game(update.message.chat).scores_final()))
     else:
         update.message.reply_text(
-            "Current turn: {0}\n\nUse /roll to roll dice.\n\nUse /score to view your scoreboard.".format(
+            "Current turn: {0}\n\nUse /roll to roll dice.\n\nUse /score to view your scoreboard.\n"
+            "Use /score_all to view everyone's total score.".format(
                 gamemanager.current_turn(update.message.chat)),
             quote=False)
 
@@ -263,6 +264,18 @@ def score(bot, update):
         update.message.reply_text(str(e), quote=False)
         return
     update.message.reply_text("Scoreboard for {0}:\n\n`{1}`".format(player, scores), quote=False,
+                              parse_mode=ParseMode.MARKDOWN)
+
+
+def score_all(bot, update):
+    if not chk_game_runs(update):
+        return
+    try:
+        scores = gamemanager.game(update.message.chat).scores_final()
+    except PlayerError as e:
+        update.message.reply_text(str(e), quote=False)
+        return
+    update.message.reply_text("Current total scores:\n\n{0}".format(scores), quote=False,
                               parse_mode=ParseMode.MARKDOWN)
 
 
@@ -293,6 +306,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('move', commit))
     updater.dispatcher.add_handler(CommandHandler('score', score))
+    updater.dispatcher.add_handler(CommandHandler('score_all', score_all))
     updater.dispatcher.add_handler(CommandHandler(['1', '2', '3', '4', '5', 'dr', 'rr'], reroll_process))
     updater.dispatcher.add_handler(
         CommandHandler(
