@@ -200,6 +200,10 @@ class Game(object):
         """Clear pooled dice"""
         self.reroll_pool = []
 
+    def reroll_pool_select_all(self):
+        """Clear pooled dice"""
+        self.reroll_pool = ['1', '2', '3', '4', '5']
+
     def reroll_pool_toggle(self, player, dice):
         """Toggle dice in reroll pool"""
         if len(dice) != 1:
