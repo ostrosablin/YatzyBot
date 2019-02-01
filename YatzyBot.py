@@ -192,11 +192,11 @@ def reroll_process(bot, update):
             update.message.reply_text("{0}".format(dice_to_wildcard(gamemanager.game(update.message.chat))),
                                       quote=False)
         elif arg == 'rr':
-            gamemanager.game(update.message.chat).reroll_pool_clear()
+            gamemanager.game(update.message.chat).reroll_pool_clear(player)
             update.message.reply_text("{0}".format(dice_to_wildcard(gamemanager.game(update.message.chat))),
                                       quote=False)
         elif arg == 'sa':
-            gamemanager.game(update.message.chat).reroll_pool_select_all()
+            gamemanager.game(update.message.chat).reroll_pool_select_all(player)
             update.message.reply_text("{0}".format(dice_to_wildcard(gamemanager.game(update.message.chat))),
                                       quote=False)
         elif arg == 'dr':

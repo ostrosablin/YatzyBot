@@ -196,12 +196,14 @@ class Game(object):
         self.reroll_pool = []
         return self.hand
 
-    def reroll_pool_clear(self):
+    def reroll_pool_clear(self, player):
         """Clear pooled dice"""
+        self.chk_command_usable(player)
         self.reroll_pool = []
 
-    def reroll_pool_select_all(self):
+    def reroll_pool_select_all(self, player):
         """Clear pooled dice"""
+        self.chk_command_usable(player)
         self.reroll_pool = ['1', '2', '3', '4', '5']
 
     def reroll_pool_toggle(self, player, dice):
