@@ -155,7 +155,7 @@ class Game(object):
         if not self.hand:
             raise PlayerError("Cannot reroll - you didn't roll a hand yet")
         if len(query) > 5 or len(query) < 1:
-            raise PlayerError("List of numbers to reroll should be 1-5 characters long")
+            raise PlayerError("You should select from 1 to 5 dice to reroll")
 
     def reroll_dice(self, player, dice):
         """Reroll dice by positions"""
