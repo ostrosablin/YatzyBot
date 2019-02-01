@@ -217,11 +217,15 @@ class Scoreboard(object):
         scores = self.final_scores()
         output = []
         place = 1
+        last_score = 0
         suffix = {1: 'st', 2: 'nd', 3: 'rd'}
         for player in scores:
+            if scores[player] == last_score:
+                place -= 1
             output.append(
                 "{0}{1} place - {2} ({3} points)".format(place, suffix.get(place, 'th'), player, scores[player]))
             place += 1
+            last_score = scores[player]
         return '\n'.join(output)
 
 
