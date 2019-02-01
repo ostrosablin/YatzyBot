@@ -172,9 +172,9 @@ def roll(bot, update):
 def reroll(bot, update):
     if not chk_game_runs(update):
         return
-    msg = "Reroll menu:\n\n{0}\n\n/rr - Reset reroll.\n\n/sa - Select all.\n\n/1 - Toggle reroll first dice.\n\n" \
+    msg = "Reroll menu:\n\n{0}\n\n/rr - Reset reroll.\n\n/1 - Toggle reroll first dice.\n\n" \
           "/2 - Toggle reroll second dice.\n\n/3 - Toggle reroll third dice.\n\n/4 - Toggle reroll fourth dice.\n\n" \
-          "/5 - Toggle reroll fifth dice.\n\n/dr - Do reroll.\n\n" \
+          "/5 - Toggle reroll fifth dice.\n\n/sa - Select all.\n\n/dr - Do reroll.\n\n" \
           "/move - Choose a move.".format(dice_to_wildcard(gamemanager.game(update.message.chat)))
     if gamemanager.game(update.message.chat).reroll > 1:
         msg = "You have already rerolled twice. Use /move command to finish your move."
