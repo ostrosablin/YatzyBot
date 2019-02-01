@@ -50,17 +50,15 @@ def dice_to_wildcard(game):
 
 
 def start(bot, update):
+    msg = ""
+    logger.info("Start attempt - chat_id {0}".format(update.message.chat.id))
     if is_private(update):
-        logger.info("Private start attempt - chat_id {0}".format(update.message.chat.id))
-        update.message.reply_text(
-            "Hello! I'm Yatzy/Yahtzee bot.\n\n"
-            "If you want to play, add me to some group and use /start command there.", quote=False)
-        return
+        msg = "NOTE: Solo mode, if you want to play a multiplayer game with friends, add me to some group and use /start command there.\n\n"
     if not gamemanager.is_game_created(update.message.chat):
-        logger.info("Group start attempt - chat_id {0}".format(update.message.chat.id))
-        update.message.reply_text("Let's get started, eh?\n\n"
+        update.message.reply_text("Hello! I'm Yatzy/Yahtzee bot. To see the help, use /help command.\n\n"
+                                  "Let's get started, eh?\n\n{0}"
                                   "Please, choose a game you want to play:\n/startyatzy - Start Yatzy game\n"
-                                  "/startyahtzee - Start Yahtzee game",
+                                  "/startyahtzee - Start Yahtzee game".format(msg),
                                   quote=False)
     elif not gamemanager.is_game_running(update.message.chat):
         try:
@@ -74,19 +72,23 @@ def start(bot, update):
 
 
 def startgame(bot, update, yahtzee):
-    if update.message.chat.type == 'private':
-        return
     game = "Yahtzee" if yahtzee else "Yatzy"
     try:
         gamemanager.new_game(update.message.chat, update.message.from_user, yahtzee)
+        if update.message.chat.type == 'private':
+            gamemanager.game(update.message.chat).start_game(gamemanager.player(update.message.from_user))
     except PlayerError as e:
         update.message.reply_text(str(e), quote=False)
         return
     player = gamemanager.player(update.message.from_user)
     logger.info("{0} has created a new {1} game - chat_id {2}".format(player, game, update.message.chat.id))
-    update.message.reply_text(
-        "Success! You've created and joined a new {0} game!\n\nOthers can join using /join command.\n"
-        "When all set - use /start to begin.\n\nGame owner: {1}".format(game, player), quote=False)
+    if update.message.chat.type == 'private':
+        update.message.reply_text("Success! You've created and joined a new solo {0} game! "
+                                  "Roll dice with /roll".format(game), quote=False)
+    else:
+        update.message.reply_text(
+            "Success! You've created and joined a new {0} game!\n\nOthers can join using /join command.\n"
+            "When all set - use /start to begin.\n\nGame owner: {1}".format(game, player), quote=False)
 
 
 def startyahtzee(bot, update):
@@ -114,7 +116,7 @@ def is_private(update):
 
 
 def stop(bot, update):
-    if not chk_game_runs(update) or is_private(update):
+    if not chk_game_runs(update):
         return
     try:
         gamemanager.game(update.message.chat).stop_game(gamemanager.player(update.message.from_user))
@@ -124,8 +126,6 @@ def stop(bot, update):
 
 
 def join(bot, update):
-    if is_private(update):
-        return
     if not gamemanager.is_game_created(update.message.chat):
         update.message.reply_text("Game is not exists", quote=False)
         return
@@ -140,8 +140,6 @@ def join(bot, update):
 
 
 def leave(bot, update):
-    if is_private(update):
-        return
     if not gamemanager.is_game_created(update.message.chat):
         update.message.reply_text("Game is not exists", quote=False)
         return
@@ -156,7 +154,7 @@ def leave(bot, update):
 
 
 def roll(bot, update):
-    if is_private(update) or not chk_game_runs(update):
+    if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -172,7 +170,7 @@ def roll(bot, update):
 
 
 def reroll(bot, update):
-    if is_private(update) or not chk_game_runs(update):
+    if not chk_game_runs(update):
         return
     msg = "Reroll menu:\n\n{0}\n\n/rr - Reset reroll.\n\n/1 - Toggle reroll first dice.\n\n" \
           "/2 - Toggle reroll second dice.\n\n/3 - Toggle reroll third dice.\n\n/4 - Toggle reroll fourth dice.\n\n" \
@@ -185,7 +183,7 @@ def reroll(bot, update):
 
 def reroll_process(bot, update):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
-    if is_private(update) or not chk_game_runs(update):
+    if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -213,7 +211,7 @@ def reroll_process(bot, update):
 
 
 def commit(bot, update):
-    if is_private(update) or not chk_game_runs(update):
+    if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -232,7 +230,7 @@ def commit(bot, update):
 
 def commit_move(bot, update):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
-    if is_private(update) or not chk_game_runs(update):
+    if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -256,7 +254,7 @@ def commit_move(bot, update):
 
 
 def score(bot, update):
-    if is_private(update) or not chk_game_runs(update):
+    if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -270,10 +268,10 @@ def score(bot, update):
 
 def help(bot, update):
     logger.info("Help invoked")
-    if is_private(update):
-        update.message.reply_text("Add this bot to a group and use /start command", quote=False)
-    else:
-        update.message.reply_text("Use /start command to begin.", quote=False)
+    update.message.reply_text("Use /start command to begin and follow the instructions.\n\n"
+                              "You can read on Yatzy and Yahtzee rules here:\n"
+                              "https://en.wikipedia.org/wiki/Yatzy\n"
+                              "https://en.wikipedia.org/wiki/Yahtzee", quote=False)
 
 
 def error(bot, update, error):
