@@ -252,7 +252,7 @@ def commit_move(bot, update):
             'The game has ended! Final scores:\n\n{0}'.format(gamemanager.game(update.message.chat).scores_final()), quote=False)
     else:
         update.message.reply_text(
-            "Current turn: {0}\n\nUse /roll to roll dice.\n\nUse /score to view your scoreboard.\n"
+            "Current turn: {0}\n\nUse /roll to roll dice.\n\nUse /score to view your scoreboard.\n\n"
             "Use /score_all to view everyone's total score.".format(
                 gamemanager.current_turn(update.message.chat)), quote=False)
 
