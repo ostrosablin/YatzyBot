@@ -57,7 +57,7 @@ def start(bot, update):
     if not gamemanager.is_game_created(update.message.chat):
         update.message.reply_text("Hello! I'm Yatzy/Yahtzee bot. To see the help, use /help command.\n\n"
                                   "Let's get started, eh?\n\n{0}"
-                                  "Please, choose a game you want to play:\n/startyatzy - Start Yatzy game\n"
+                                  "Please, choose a game you want to play:\n/startyatzy - Start Yatzy game\n\n"
                                   "/startyahtzee - Start Yahtzee game".format(msg),
                                   quote=False)
     elif not gamemanager.is_game_running(update.message.chat):
@@ -87,7 +87,7 @@ def startgame(bot, update, yahtzee):
                                   "Roll dice with /roll".format(game), quote=False)
     else:
         update.message.reply_text(
-            "Success! You've created and joined a new {0} game!\n\nOthers can join using /join command.\n"
+            "Success! You've created and joined a new {0} game!\n\nOthers can join using /join command.\n\n"
             "When all set - use /start to begin.\n\nGame owner: {1}".format(game, player), quote=False)
 
 
@@ -164,8 +164,8 @@ def roll(bot, update):
         return
     update.message.reply_text(
         "{0} has rolled {1}\n\n"
-        "Use /reroll to choose dice for reroll.\n"
-        "Use /move to choose a move.\n".format(player, ' '.join([d.to_emoji() for d in dice])),
+        "Use /reroll to choose dice for reroll.\n\n"
+        "Use /move to choose a move.\n\n".format(player, ' '.join([d.to_emoji() for d in dice])),
         quote=False)
 
 
@@ -177,7 +177,7 @@ def reroll(bot, update):
           "/5 - Toggle reroll fifth dice.\n\n/dr - Do reroll.\n\n" \
           "/move - Choose a move.".format(dice_to_wildcard(gamemanager.game(update.message.chat)))
     if gamemanager.game(update.message.chat).reroll > 1:
-        msg = "You have already rerolled twice. Proceed to /move move."
+        msg = "You have already rerolled twice. Use /move command to finish your move."
     update.message.reply_text(msg, quote=False)
 
 
@@ -203,7 +203,7 @@ def reroll_process(bot, update):
             dice = gamemanager.game(update.message.chat).reroll_pooled(player)
             rerolllink = ""
             if gamemanager.game(update.message.chat).reroll < 2:
-                rerolllink = "/reroll - Do reroll.\n"
+                rerolllink = "/reroll - Do reroll.\n\n"
             update.message.reply_text(
                 "{0} has rolled {1}\n\n{2}/move - Do a move.".format(player, ' '.join([d.to_emoji() for d in dice]),
                                                                      rerolllink), quote=False)
