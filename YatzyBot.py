@@ -245,13 +245,12 @@ def commit_move(bot, update):
     if gamemanager.game(update.message.chat).is_completed():
         logger.info("The game is completed - chat_id {0}".format(player, update.message.chat.id))
         update.message.reply_text(
-            'The game has ended! Final scores:\n\n{0}'.format(gamemanager.game(update.message.chat).scores_final()))
+            'The game has ended! Final scores:\n\n{0}'.format(gamemanager.game(update.message.chat).scores_final()), quote=False)
     else:
         update.message.reply_text(
             "Current turn: {0}\n\nUse /roll to roll dice.\n\nUse /score to view your scoreboard.\n"
             "Use /score_all to view everyone's total score.".format(
-                gamemanager.current_turn(update.message.chat)),
-            quote=False)
+                gamemanager.current_turn(update.message.chat)), quote=False)
 
 
 def score(bot, update):
