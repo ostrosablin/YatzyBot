@@ -325,6 +325,8 @@ class Box(object):
     def straight_yatzy(cls, dice, target):
         """Find a one of two runs of 5 consecutive dice"""
         roll = sort_and_dedupe(dice)
+        if len(roll) < 5:
+            return 0
         total = roll[0]
         for i in range(len(roll) - 1):
             if roll[i] + 1 == roll[i + 1]:
