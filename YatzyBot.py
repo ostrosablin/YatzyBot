@@ -19,8 +19,9 @@
 
 import logging
 
-from telegram import ParseMode
-from telegram.ext import Updater, CommandHandler
+from telegram import ParseMode, bot
+from telegram.ext import Updater, CommandHandler, messagequeue
+from telegram.utils.request import Request
 
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
@@ -304,8 +305,32 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
+class MQBot(bot.Bot):
+    """A subclass of Bot which delegates send method handling to MQ"""
+    def __init__(self, *args, is_queued_def=True, mqueue=None, **kwargs):
+        super(MQBot, self).__init__(*args, **kwargs)
+        # below 2 attributes should be provided for decorator usage
+        self._is_messages_queued_default = is_queued_def
+        self._msg_queue = mqueue or messagequeue.MessageQueue()
+
+    def __del__(self):
+        try:
+            self._msg_queue.stop()
+        except:
+            pass
+        super(MQBot, self).__del__()
+
+    @messagequeue.queuedmessage
+    def send_message(self, *args, **kwargs):
+        """Wrapped method would accept new `queued` and `isgroup`
+        OPTIONAL arguments"""
+        return super(MQBot, self).send_message(*args, **kwargs)
+
 def main():
-    updater = Updater(TOKEN, request_kwargs=REQUEST_KWARGS)
+    mq = messagequeue.MessageQueue()
+    request = Request(con_pool_size=8)
+    bot = MQBot(TOKEN, request=request, mqueue=mq)
+    updater = Updater(bot=bot, request_kwargs=REQUEST_KWARGS)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('startyatzy', startyatzy))
