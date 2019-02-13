@@ -262,7 +262,7 @@ def commit_move(bot, update):
     update.message.reply_text("Scoreboard for {0}:\n\n`{1}`".format(player, scores), quote=False,
                               parse_mode=ParseMode.MARKDOWN, isgroup=not is_private(update))
     if gamemanager.game(update.message.chat).is_completed():
-        logger.info("The game is completed - chat_id {0}".format(player, update.message.chat.id))
+        logger.info("The game is completed - chat_id {0}".format(update.message.chat.id))
         update.message.reply_text(
             'The game has ended! Final scores:\n\n{0}'.format(gamemanager.game(update.message.chat).scores_final()),
             quote=False, isgroup=not is_private(update))
