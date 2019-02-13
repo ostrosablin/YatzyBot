@@ -360,10 +360,12 @@ def main():
     # Start the Bot
     updater.start_polling()
 
+    logger.info("YatzyBot has started.")
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT
     updater.idle()
 
+    logger.info("Shutting down the bot...")
     bot.__del__()  # Force thread stop to allow process termination.
 
 if __name__ == '__main__':
