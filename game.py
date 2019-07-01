@@ -19,6 +19,7 @@
 
 from collections import UserString
 from time import time
+from random import shuffle
 
 from dice import Dice
 from error import PlayerError
@@ -254,6 +255,7 @@ class Game(object):
             raise PlayerError("At least one person should join a game to start")
         if player != self.owner:
             raise PlayerError("Only owner can do this!")
+        shuffle(self.players)
         self.scoreboard = Scoreboard(self.players, self.yahtzee)
         self.started = True
         self.last_op = time()
