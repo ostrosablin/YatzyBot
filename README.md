@@ -3,6 +3,7 @@ A Telegram bot to play Yatzy and Yahtzee (multiplayer)
 
 Features:
 * Complete support of Yatzy and Yahtzee rules.
+* Also supports Forced Yatzy, Maxi Yatzy and Forced Maxi Yatzy rule variants.
 * Multiplayer group bot, allowing to play a game with friends.
 * Completely clickable controls style, can be played from both PC or smartphone comfortably, no typing necessary.
 
