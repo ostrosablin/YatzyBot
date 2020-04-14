@@ -134,7 +134,7 @@ class Scoreboard(object):
             total += box.score if box.score is not None else 0
         # Compute lower section subtotal
         self.scores[player]["Lower Section Totals"].set_score(total-upper)
-        self.scores[player]["Total"].set_score(total)
+        self.scores[player]["Grand Total"].set_score(total)
         return bonus
 
     def get_score_options(self, player, dice):
@@ -236,7 +236,7 @@ class Scoreboard(object):
         """Get final scoring"""
         scores = []
         for player in self.players:
-            scores.append((player, self.scores[player]['Total'].score))
+            scores.append((player, self.scores[player]['Grand Total'].score))
         return OrderedDict(sorted(scores, reverse=True, key=lambda x: x[1]))
 
     def print_final_scores(self):
