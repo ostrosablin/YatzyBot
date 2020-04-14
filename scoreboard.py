@@ -128,7 +128,7 @@ class Scoreboard(object):
         # Compute and award upper section bonus
         bonus = self.award_upper_section_bonus(player)
         # Keep upper score to compute lower subtotal
-        upper = total + bonus
+        upper = total + self.scores[player].get("Upper Section Bonus").score
         # Proceed to compute totals
         for box in list(self.scores[player].values())[7:-2]:
             total += box.score if box.score is not None else 0
