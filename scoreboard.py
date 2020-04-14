@@ -345,10 +345,10 @@ class Box(object):
             max_suitable = 0
             for j in ctr:
                 if ctr[j] >= i:
-                    max_suitable = j
+                    max_suitable = max(int(j), max_suitable)
             if max_suitable:
-                totals += (int(max_suitable) * i)
-                del ctr[max_suitable]
+                totals += (max_suitable * i)
+                del ctr[str(max_suitable)]
             else:
                 return 0
         return totals
