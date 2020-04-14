@@ -303,13 +303,14 @@ class Box(object):
     def sum_n_of_a_kind(cls, dice, n, yahtzee):
         """Count a sum for dice in N of a Kind"""
         ctr = count_dice(dice)
+        max_suitable = 0
         for i in ctr:
             if ctr[i] >= n:
                 if yahtzee:  # In Yahtzee, all hand is counted
                     return sum([int(d) for d in dice])
                 else:
-                    return int(i) * n
-        return 0
+                    max_suitable = max(int(i), max_suitable)
+        return max_suitable * n
 
     @classmethod
     def straight_yahtzee(cls, dice, n):
