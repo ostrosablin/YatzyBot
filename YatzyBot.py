@@ -315,10 +315,15 @@ def commit_move(bot, update):
             'The game has ended! Final scores:\n\n{0}'.format(gamemanager.game(update.message.chat).scores_final()),
             quote=False, isgroup=not is_private(update))
     else:
+        saved = ""
+        if gamemanager.game(update.message.chat).maxi:
+            extra = gamemanager.game(update.message.chat).saved_rerolls[player]
+            if extra:
+                saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
         update.message.reply_text(
             "Current turn: {0}\n\nUse /roll to roll dice.\n\nUse /score to view your scoreboard.\n\n"
-            "Use /score_all to view everyone's total score.".format(
-                gamemanager.current_turn(update.message.chat)), quote=False, isgroup=not is_private(update))
+            "Use /score_all to view everyone's total score.\n\n{1}".format(
+                gamemanager.current_turn(update.message.chat), saved), quote=False, isgroup=not is_private(update))
 
 
 def score(bot, update):
