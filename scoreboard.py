@@ -56,7 +56,7 @@ class Scoreboard(object):
                 Box("Fours", lambda dice: Box.sum_particular_digits(dice, 4), lambda dice: 0),
                 Box("Fives", lambda dice: Box.sum_particular_digits(dice, 5), lambda dice: 0),
                 Box("Sixes", lambda dice: Box.sum_particular_digits(dice, 6), lambda dice: 0),
-                Box("Upper Section Totals", None, None, 0), Box("Upper Section Bonus", None, None, 0)]
+                Box("Up. Sect. Total", None, None, 0), Box("Up. Sect. Bonus", None, None, 0)]
             if not yahtzee:
                 boxes.append(Box("One Pair", lambda dice: Box.groups(dice, [2])))
                 boxes.append(Box("Two Pairs", lambda dice: Box.groups(dice, [2, 2])))
@@ -85,7 +85,7 @@ class Scoreboard(object):
                 boxes.append(Box("Maxi Yatzy" if self.maxi else "Yatzy", lambda dice: Box.yatzy(dice, self.maxi)))
             if yahtzee:
                 boxes.append(Box("Yahtzee Bonus", None, None, 0))
-            boxes.append(Box("Lower Section Totals", None, None, 0))
+            boxes.append(Box("Low. Sect. Total", None, None, 0))
             boxes.append(Box("Grand Total", None, None, 0))
             self.scores[player] = OrderedDict([(box.name, box) for box in boxes])
 
@@ -108,12 +108,12 @@ class Scoreboard(object):
         UPPER_SECTION_BONUS = 63 if not self.maxi else 84  # 84 or more for Maxi Yatzy
         if self.forced:
             UPPER_SECTION_BONUS -= 21  # 42 for Forced Yatzy (63 for Forced Maxi Yatzy)
-        if self.scores[player].get("Upper Section Totals").score >= UPPER_SECTION_BONUS:
+        if self.scores[player].get("Up. Sect. Total").score >= UPPER_SECTION_BONUS:
             # And if we didn't score the bonus yet
-            if not self.scores[player].get("Upper Section Bonus").score:
+            if not self.scores[player].get("Up. Sect. Bonus").score:
                 # Add 50 extra points to Upper Section Bonus (35 for Yahtzee)
                 bonus = 35 if self.yahtzee else (50 if not self.maxi else 100)
-                self.scores[player]["Upper Section Bonus"].set_score(bonus)
+                self.scores[player]["Up. Sect. Bonus"].set_score(bonus)
                 return bonus
         return 0
 
@@ -124,16 +124,16 @@ class Scoreboard(object):
         upper = 0
         for box in list(self.scores[player].values())[:6]:
             total += box.score if box.score is not None else 0
-        self.scores[player]["Upper Section Totals"].set_score(total)
+        self.scores[player]["Up. Sect. Total"].set_score(total)
         # Compute and award upper section bonus
         bonus = self.award_upper_section_bonus(player)
         # Keep upper score to compute lower subtotal
-        upper = total + self.scores[player].get("Upper Section Bonus").score
+        upper = total + self.scores[player].get("Up. Sect. Bonus").score
         # Proceed to compute totals
         for box in list(self.scores[player].values())[7:-2]:
             total += box.score if box.score is not None else 0
         # Compute lower section subtotal
-        self.scores[player]["Lower Section Totals"].set_score(total-upper)
+        self.scores[player]["Low. Sect. Total"].set_score(total-upper)
         self.scores[player]["Grand Total"].set_score(total)
         return bonus
 
@@ -217,7 +217,7 @@ class Scoreboard(object):
         output = [["", player.user.username or player.user.first_name]]
         for box in self.scores[player].values():
             output.append([box.name, "" if box.score is None else str(box.score)])
-            if box.name == "Upper Section Bonus":
+            if box.name == "Up. Sect. Bonus":
                 output.append(["", ""])
         return tabulate(output, tablefmt="simple")
 
