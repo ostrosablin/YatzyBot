@@ -41,6 +41,10 @@ class Scoreboard(object):
     """This class represents a Yatzy/Yahtzee scoreboard"""
 
     def __init__(self, players, yahtzee=False, forced=False, maxi=False):
+        if (maxi or forced) and yahtzee:
+            raise ValueError("Error, Maxi and Forced mode is valid only for Yatzy game!")
+        if (maxi and forced):
+            raise ValueError("Maxi and Forced Yatzy modes are mutual exclusive!")
         self.players = players  # List of players
         self.yahtzee = yahtzee  # If True - we play Yahtzee (strict commercial rules)
         self.forced = forced  # If True - play Forced Yahtzee variant
@@ -56,19 +60,31 @@ class Scoreboard(object):
                 Box("Sixes", lambda dice: Box.sum_particular_digits(dice, 6), lambda dice: 0),
                 Box("Upper Section Totals", None, None, 0), Box("Upper Section Bonus", None, None, 0)]
             if not yahtzee:
-                boxes.append(Box("One Pair", Box.sum_pair))
-                boxes.append(Box("Two Pairs", Box.sum_two_pairs))
+                boxes.append(Box("One Pair", lambda dice: Box.groups(dice, [2])))
+                boxes.append(Box("Two Pairs", lambda dice: Box.groups(dice, [2, 2])))
+                if self.maxi:
+                    boxes.append(Box("Three Pairs", lambda dice: Box.groups(dice, [2, 2, 2])))
             boxes.append(Box("Three of a Kind", lambda dice: Box.sum_n_of_a_kind(dice, 3, yahtzee), Box.chance))
             boxes.append(Box("Four of a Kind", lambda dice: Box.sum_n_of_a_kind(dice, 4, yahtzee), Box.chance))
+            if self.maxi:
+                boxes.append(Box("Five of a Kind", lambda dice: Box.sum_n_of_a_kind(dice, 5, yahtzee)))
             boxes.append(Box("Full House", lambda dice: Box.full_house(dice, yahtzee), lambda dice: 25))
+            if self.maxi:
+                boxes.append(Box("Castle", lambda dice: Box.groups(dice, [3, 3])))
+                boxes.append(Box("Tower", lambda dice: Box.groups(dice, [2, 4])))
             if yahtzee:
                 boxes.append(Box("Small Straight", lambda dice: Box.straight_yahtzee(dice, 4), lambda dice: 30))
                 boxes.append(Box("Large Straight", lambda dice: Box.straight_yahtzee(dice, 5), lambda dice: 40))
             else:
-                boxes.append(Box("Small Straight", lambda dice: Box.straight_yatzy(dice, 15)))
-                boxes.append(Box("Large Straight", lambda dice: Box.straight_yatzy(dice, 20)))
+                boxes.append(Box("Small Straight", lambda dice: Box.straight_yatzy(dice, 1, 5)))
+                boxes.append(Box("Large Straight", lambda dice: Box.straight_yatzy(dice, 2, 6)))
+                if self.maxi:
+                    boxes.append(Box("Full Straight", lambda dice: Box.straight_yatzy(dice, 1, 6)))
             boxes.append(Box("Chance", Box.chance))
-            boxes.append(Box("Yahtzee" if yahtzee else "Yatzy", Box.yatzy))
+            if self.yahtzee:
+                boxes.append(Box("Yahtzee", Box.yatzy))
+            else:
+                boxes.append(Box("Maxi Yatzy" if self.maxi else "Yatzy", lambda dice: Box.yatzy(dice, self.maxi)))
             if yahtzee:
                 boxes.append(Box("Yahtzee Bonus", None, None, 0))
             boxes.append(Box("Lower Section Totals", None, None, 0))
@@ -100,7 +116,7 @@ class Scoreboard(object):
             # And if we didn't score the bonus yet
             if not self.scores[player].get("Upper Section Bonus").score:
                 # Add 50 extra points to Upper Section Bonus (35 for Yahtzee)
-                bonus = 35 if self.yahtzee else 50
+                bonus = 35 if self.yahtzee else (50 if not self.maxi else 100)
                 self.scores[player]["Upper Section Bonus"].set_score(bonus)
                 return bonus
         return 0
@@ -288,28 +304,6 @@ class Box(object):
         return ctr[str(digit)] * digit
 
     @classmethod
-    def sum_pair(cls, dice):
-        """Count a sum of a largest pair in roll"""
-        ctr = count_dice(dice)
-        largest = 0
-        for i in ctr:
-            if ctr[i] > 1:
-                largest = max(largest, int(i))
-        return largest * 2
-
-    @classmethod
-    def sum_two_pairs(cls, dice):
-        """Count a sum of two pairs in roll"""
-        ctr = count_dice(dice)
-        pairs = []
-        for i in ctr:
-            if ctr[i] > 1:
-                pairs.append(int(i))
-        if len(pairs) < 2:
-            return 0
-        return sum([pair * 2 for pair in pairs])
-
-    @classmethod
     def sum_n_of_a_kind(cls, dice, n, yahtzee):
         """Count a sum for dice in N of a Kind"""
         ctr = count_dice(dice)
@@ -337,36 +331,44 @@ class Box(object):
         return score.get(n, 0) if seq >= n else 0
 
     @classmethod
-    def straight_yatzy(cls, dice, target):
-        """Find a one of two runs of 5 consecutive dice"""
+    def straight_yatzy(cls, dice, start=1, end=5):
+        """Find a specific run of consecutive dice"""
         roll = sort_and_dedupe(dice)
-        if len(roll) < 5:
+        expected = set(range(start, end+1))
+        if bool(expected-set(roll)):
             return 0
-        total = roll[0]
-        for i in range(len(roll) - 1):
-            if roll[i] + 1 == roll[i + 1]:
-                total += roll[i + 1]
+        return sum(expected)
+
+    @classmethod
+    def groups(cls, dice, groups):
+        """Match an abstract dice groups by count"""
+        ctr = count_dice(dice)
+        expected = sorted(groups)
+        totals = 0
+        for i in reversed(expected):
+            max_suitable = 0
+            for j in ctr:
+                if ctr[j] >= i:
+                    max_suitable = j
+            if max_suitable:
+                totals += (max_suitable * i)
+                del ctr[max_suitable]
             else:
                 return 0
-        return total if total == target else 0
+        return totals
 
     @classmethod
     def full_house(cls, dice, yahtzee):
         """Find a Full House dice set"""
-        ctr = count_dice(dice)
-        if len(ctr) != 2:
-            return 0
-        for i in ctr:
-            if ctr[i] not in (2, 3):
-                return 0
-        if yahtzee:
+        totals = cls.groups(dice, [2, 3])
+        if totals and yahtzee:
             return 25
-        return sum([int(d) for d in dice])
+        return totals
 
     @classmethod
-    def yatzy(cls, dice):
+    def yatzy(cls, dice, maxi=False):
         """Find a Yatzy/Yahtzee dice set"""
-        return 0 if len(count_dice(dice)) != 1 else 50
+        return 0 if len(count_dice(dice)) != 1 else (50 if not maxi else 100)
 
     @classmethod
     def chance(cls, dice):
