@@ -40,9 +40,11 @@ def sort_and_dedupe(dice):
 class Scoreboard(object):
     """This class represents a Yatzy/Yahtzee scoreboard"""
 
-    def __init__(self, players, yahtzee=False):
+    def __init__(self, players, yahtzee=False, forced=False, maxi=False):
         self.players = players  # List of players
-        self.yahtzee = yahtzee
+        self.yahtzee = yahtzee  # If True - we play Yahtzee (strict commercial rules)
+        self.forced = forced  # If True - play Forced Yahtzee variant
+        self.maxi = maxi  # If True - play Maxi Yahtzee variant
         self.scores = {}
         for player in self.players:
             boxes = [
@@ -69,7 +71,8 @@ class Scoreboard(object):
             boxes.append(Box("Yahtzee" if yahtzee else "Yatzy", Box.yatzy))
             if yahtzee:
                 boxes.append(Box("Yahtzee Bonus", None, None, 0))
-            boxes.append(Box("Total", None, None, 0))
+            boxes.append(Box("Lower Section Totals", None, None, 0))
+            boxes.append(Box("Grand Total", None, None, 0))
             self.scores[player] = OrderedDict([(box.name, box) for box in boxes])
 
     def award_yahtzee_bonus(self, player, dice):
@@ -88,7 +91,12 @@ class Scoreboard(object):
     def award_upper_section_bonus(self, player):
         """Check if Upper Section Bonus is to be awarded and give it"""
         # Upper Section Bonus - if we score 63 or more in upper section
-        if self.scores[player].get("Upper Section Totals").score > 62:
+        UPPER_SECTION_BONUS = 63
+        if self.forced:
+            UPPER_SECTION_BONUS = 42  # 42 or more for Forced Yatzy
+        elif self.maxi:
+            UPPER_SECTION_BONUS = 84  # 84 or more for Maxi Yatzy
+        if self.scores[player].get("Upper Section Totals").score >= UPPER_SECTION_BONUS:
             # And if we didn't score the bonus yet
             if not self.scores[player].get("Upper Section Bonus").score:
                 # Add 50 extra points to Upper Section Bonus (35 for Yahtzee)
@@ -101,14 +109,19 @@ class Scoreboard(object):
         """Compute all calculated boxes"""
         # Recompute Upper Section Totals
         total = 0
+        upper = 0
         for box in list(self.scores[player].values())[:6]:
             total += box.score if box.score is not None else 0
         self.scores[player]["Upper Section Totals"].set_score(total)
         # Compute and award upper section bonus
         bonus = self.award_upper_section_bonus(player)
+        # Keep upper score to compute lower subtotal
+        upper = total
         # Proceed to compute totals
-        for box in list(self.scores[player].values())[7:-1]:
+        for box in list(self.scores[player].values())[7:-2]:
             total += box.score if box.score is not None else 0
+        # Compute lower section subtotal
+        self.scores[player]["Lower Section Totals"].set_score(total-upper)
         self.scores[player]["Total"].set_score(total)
         return bonus
 
@@ -141,6 +154,8 @@ class Scoreboard(object):
         for box in self.scores[player].values():
             if box.score is None:
                 scores.append((box.name, box.preview_dice(dice)))
+                if self.forced:
+                    break  # In Forced Yatzy, we only give a first unfilled box
         return OrderedDict(sorted(scores, reverse=True, key=lambda x: x[1]))
 
     def commit_dice_combination(self, player, dice, boxname):
