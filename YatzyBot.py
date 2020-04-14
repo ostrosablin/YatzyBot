@@ -35,8 +35,11 @@ gamemanager = GameManager()
 
 WILDCARD_DICE = "*️⃣"
 MAP_TURNS = {'on': "Ones", 'ac': "Aces", 'tw': "Twos", 'th': "Threes", 'fo': "Fours", 'fi': "Fives", 'si': "Sixes",
-             'op': "One Pair", 'tp': "Two Pairs", 'tk': "Three of a Kind", 'fk': "Four of a Kind", 'fh': "Full House",
-             'ss': "Small Straight", 'ls': "Large Straight", 'ch': "Chance", 'ya': "Yatzy", 'yh': "Yahtzee"}
+             'op': "One Pair", 'tp': "Two Pairs", '3p': "Three Pairs",
+             'tk': "Three of a Kind", 'fk': "Four of a Kind", '5k': "Five of a Kind",
+             'fh': "Full House", 'ca': "Castle", 'to': "Tower",
+             'ss': "Small Straight", 'ls': "Large Straight", 'fs': "Full Straight",
+             'ch': "Chance", 'ya': "Yatzy", 'yh': "Yahtzee", 'my': "Maxi Yatzy"}
 MAP_COMMANDS = {v: k for k, v in MAP_TURNS.items()}
 
 
@@ -59,7 +62,8 @@ def start(bot, update):
         update.message.reply_text("Hello! I'm Yatzy/Yahtzee bot. To see the help, use /help command.\n\n"
                                   "Let's get started, eh?\n\n{0}"
                                   "Please, choose a game you want to play:\n/startyatzy - Start Yatzy game\n\n"
-                                  "/startyahtzee - Start Yahtzee game".format(msg),
+                                  "/startyahtzee - Start Yahtzee game\n\n/startforcedyatzy - Start Forced Yatzy game\n\n"
+                                  "/startmaxiyatzy - Start Maxi Yatzy game\n\n/startforcedmaxiyatzy - Start Forced Maxi Yatzy game".format(msg),
                                   quote=False, isgroup=not is_private(update))
     elif not gamemanager.is_game_running(update.message.chat):
         try:
@@ -73,10 +77,19 @@ def start(bot, update):
             update.message.reply_text(str(e), quote=False, isgroup=not is_private(update))
 
 
-def startgame(bot, update, yahtzee):
-    game = "Yahtzee" if yahtzee else "Yatzy"
+def startgame(bot, update, yahtzee, forced=False, maxi=False):
+    if yahtzee:
+        game = "Yahtzee"
+    else:
+        gname = []
+        if forced:
+            gname.append("Forced")
+        if maxi:
+            gname.append("Maxi")
+        gname.append("Yatzy")
+        game = ' '.join(gname)
     try:
-        gamemanager.new_game(update.message.chat, update.message.from_user, yahtzee)
+        gamemanager.new_game(update.message.chat, update.message.from_user, yahtzee, forced, maxi)
         if update.message.chat.type == 'private':
             gamemanager.game(update.message.chat).start_game(gamemanager.player(update.message.from_user))
     except PlayerError as e:
@@ -100,6 +113,18 @@ def startyahtzee(bot, update):
 
 def startyatzy(bot, update):
     startgame(bot, update, False)
+
+
+def startforcedyatzy(bot, update):
+    startgame(bot, update, False, True, False)
+
+
+def startmaxiyatzy(bot, update):
+    startgame(bot, update, False, False, True)
+
+
+def startforcedmaxiyatzy(bot, update):
+    startgame(bot, update, False, True, True)
 
 
 def chk_game_runs(update):
@@ -130,7 +155,7 @@ def stop(bot, update):
 
 def join(bot, update):
     if not gamemanager.is_game_created(update.message.chat):
-        update.message.reply_text("Game is not exists", quote=False, isgroup=not is_private(update))
+        update.message.reply_text("Game doesn't exists", quote=False, isgroup=not is_private(update))
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -166,6 +191,11 @@ def roll(bot, update):
     except PlayerError as e:
         update.message.reply_text(str(e), quote=False, isgroup=not is_private(update))
         return
+    saved = ""
+    if gamemanager.game(update.message.chat).maxi:
+        extra = gamemanager.game(update.message.chat).saved_rerolls[player]
+        if extra:
+            saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
     update.message.reply_text(
         "{0} has rolled {1}\n\n"
         "Use /reroll to choose dice for reroll.\n\n"
@@ -184,12 +214,20 @@ def reroll(bot, update):
     except PlayerError as e:
         update.message.reply_text(str(e), quote=False, isgroup=not is_private(update))
         return
+    sixth = ""
+    saved = ""
+    if gamemanager.game(update.message.chat).maxi:
+        sixth = "/6 - Toggle reroll sixth dice.\n\n"
+        extra = gamemanager.game(update.message.chat).saved_rerolls[player]
+        if extra:
+            saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
     msg = "Reroll menu:\n\n{0}\n\n/rr - Reset reroll.\n\n/1 - Toggle reroll first dice.\n\n" \
           "/2 - Toggle reroll second dice.\n\n/3 - Toggle reroll third dice.\n\n/4 - Toggle reroll fourth dice.\n\n" \
-          "/5 - Toggle reroll fifth dice.\n\n/sa - Select all.\n\n/dr - Do reroll.\n\n" \
-          "/move - Choose a move.".format(dice_to_wildcard(gamemanager.game(update.message.chat)))
+          "/5 - Toggle reroll fifth dice.\n\n{1}/sa - Select all.\n\n/dr - Do reroll.\n\n" \
+          "/move - Choose a move.\n\n{2}".format(dice_to_wildcard(gamemanager.game(update.message.chat)), sixth, saved)
     if gamemanager.game(update.message.chat).reroll > 1:
-        msg = "You have already rerolled twice. Use /move command to finish your move."
+        if not saved:  # We we don't have saved Maxi Yatzy turns
+            msg = "You have already rerolled twice. Use /move command to finish your move."
     update.message.reply_text(msg, quote=False, isgroup=not is_private(update))
 
 
@@ -199,7 +237,9 @@ def reroll_process(bot, update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
-        if arg in ['1', '2', '3', '4', '5']:
+        if arg in ['1', '2', '3', '4', '5', '6']:
+            if arg == '6' and not gamemanager.game(update.message.chat).maxi:  # 6 only for Maxi games
+                return
             gamemanager.game(update.message.chat).reroll_pool_toggle(player, arg)
             update.message.reply_text("{0}".format(dice_to_wildcard(gamemanager.game(update.message.chat))),
                                       quote=False, isgroup=not is_private(update))
@@ -216,9 +256,14 @@ def reroll_process(bot, update):
             rerolllink = ""
             if gamemanager.game(update.message.chat).reroll < 2:
                 rerolllink = "/reroll - Do reroll.\n\n"
+            saved = ""
+            if gamemanager.game(update.message.chat).maxi:
+                extra = gamemanager.game(update.message.chat).saved_rerolls[player]
+                if extra:
+                    saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
             update.message.reply_text(
-                "{0} has rolled {1}\n\n{2}/move - Do a move.".format(player, ' '.join([d.to_emoji() for d in dice]),
-                                                                     rerolllink),
+                "{0} has rolled {1}\n\n{2}/move - Do a move.\n\n{3}".format(player, ' '.join([d.to_emoji() for d in dice]),
+                                                                     rerolllink, saved),
                 quote=False, isgroup=not is_private(update))
         else:
             update.message.reply_text("Invalid reroll action", quote=False, isgroup=not is_private(update))
@@ -341,6 +386,9 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('startyatzy', startyatzy))
     updater.dispatcher.add_handler(CommandHandler('startyahtzee', startyahtzee))
+    updater.dispatcher.add_handler(CommandHandler('startforcedyatzy', startforcedyatzy))
+    updater.dispatcher.add_handler(CommandHandler('startmaxiyatzy', startmaxiyatzy))
+    updater.dispatcher.add_handler(CommandHandler('startforcedmaxiyatzy', startforcedmaxiyatzy))
     updater.dispatcher.add_handler(CommandHandler('stop', stop))
     updater.dispatcher.add_handler(CommandHandler('join', join))
     updater.dispatcher.add_handler(CommandHandler('leave', leave))
@@ -350,10 +398,10 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('move', commit))
     updater.dispatcher.add_handler(CommandHandler('score', score))
     updater.dispatcher.add_handler(CommandHandler('score_all', score_all))
-    updater.dispatcher.add_handler(CommandHandler(['1', '2', '3', '4', '5', 'dr', 'rr', 'sa'], reroll_process))
+    updater.dispatcher.add_handler(CommandHandler(['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa'], reroll_process))
     updater.dispatcher.add_handler(
         CommandHandler(
-            ['on', 'ac', 'tw', 'th', 'fo', 'fi', 'si', 'op', 'tp', 'tk', 'fk', 'fh', 'ss', 'ls', 'ch', 'ya', 'yh'],
+            ['on', 'ac', 'tw', 'th', 'fo', 'fi', 'si', 'op', 'tp', '3p', 'tk', 'fk', '5k', 'fh', 'ca', 'to', 'ss', 'ls', 'fs', 'ch', 'ya', 'yh', 'my'],
             commit_move))
     updater.dispatcher.add_error_handler(error)
 
