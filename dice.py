@@ -36,8 +36,10 @@ EMOJIS = {'1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '
 class Dice(object):
     """This class represents a dice"""
 
-    def __init__(self, value):
-        if type(value) == int:
+    def __init__(self, value=None):
+        if value is None:
+            self.value = str(randint(1, 6))
+        elif type(value) == int:
             self.value = str(value)
         else:
             self.value = value
@@ -78,9 +80,9 @@ class Dice(object):
     def roll(cls, n=5):
         dice = []
         for i in range(n):
-            dice.append(Dice(randint(1, 6)))
+            dice.append(Dice())
         return dice
 
     @classmethod
     def roll_single(cls):
-        return Dice(randint(1, 6))
+        return Dice()
