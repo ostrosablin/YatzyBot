@@ -237,6 +237,9 @@ def reroll_process(bot, update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
+        gamemanager.game(update.message.chat).chk_command_usable(player)
+        if not gamemanager.game(update.message.chat).hand:
+            raise PlayerError("You didn't roll a hand yet")
         if arg in ['1', '2', '3', '4', '5', '6']:
             if arg == '6' and not gamemanager.game(update.message.chat).maxi:  # 6 only for Maxi games
                 return
