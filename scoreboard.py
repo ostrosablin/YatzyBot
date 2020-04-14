@@ -43,8 +43,6 @@ class Scoreboard(object):
     def __init__(self, players, yahtzee=False, forced=False, maxi=False):
         if (maxi or forced) and yahtzee:
             raise ValueError("Error, Maxi and Forced mode is valid only for Yatzy game!")
-        if (maxi and forced):
-            raise ValueError("Maxi and Forced Yatzy modes are mutual exclusive!")
         self.players = players  # List of players
         self.yahtzee = yahtzee  # If True - we play Yahtzee (strict commercial rules)
         self.forced = forced  # If True - play Forced Yahtzee variant
@@ -107,11 +105,9 @@ class Scoreboard(object):
     def award_upper_section_bonus(self, player):
         """Check if Upper Section Bonus is to be awarded and give it"""
         # Upper Section Bonus - if we score 63 or more in upper section
-        UPPER_SECTION_BONUS = 63
+        UPPER_SECTION_BONUS = 63 if not self.maxi else 84  # 84 or more for Maxi Yatzy
         if self.forced:
-            UPPER_SECTION_BONUS = 42  # 42 or more for Forced Yatzy
-        elif self.maxi:
-            UPPER_SECTION_BONUS = 84  # 84 or more for Maxi Yatzy
+            UPPER_SECTION_BONUS -= 21  # 42 for Forced Yatzy (63 for Forced Maxi Yatzy)
         if self.scores[player].get("Upper Section Totals").score >= UPPER_SECTION_BONUS:
             # And if we didn't score the bonus yet
             if not self.scores[player].get("Upper Section Bonus").score:
