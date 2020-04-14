@@ -321,6 +321,7 @@ def commit_move(bot, update):
     else:
         saved = ""
         if gamemanager.game(update.message.chat).maxi:
+            player = gamemanager.game(update.message.chat).get_current_player()
             extra = gamemanager.game(update.message.chat).saved_rerolls[player]
             if extra:
                 saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
