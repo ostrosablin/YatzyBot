@@ -347,7 +347,7 @@ class Box(object):
                 if ctr[j] >= i:
                     max_suitable = j
             if max_suitable:
-                totals += (max_suitable * i)
+                totals += (int(max_suitable) * i)
                 del ctr[max_suitable]
             else:
                 return 0
