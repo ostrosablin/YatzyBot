@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import UserString
+from collections import UserString, defaultdict
 from time import time
 from random import shuffle
 
@@ -29,7 +29,9 @@ from scoreboard import Scoreboard
 class Game(object):
     """This class represents a Yatzy/Yahtzee game"""
 
-    def __init__(self, chat, owner, yahtzee=False):
+    def __init__(self, chat, owner, yahtzee=False, forced=False, maxi=False):
+        if (maxi or forced) and yahtzee:
+            raise ValueError("Error, Maxi and Forced mode is valid only for Yatzy game!")
         self.chat = chat
         self.owner = owner
         self.players = [owner]
@@ -38,7 +40,10 @@ class Game(object):
         self.started = False
         self.finished = False
         self.yahtzee = yahtzee
+        self.forced = forced
+        self.maxi = maxi
         self.hand = None
+        self.saved_rerolls = defaultdict(int)
         self.reroll = 0
         self.reroll_pool = []
         self.last_op = time()
@@ -98,7 +103,7 @@ class Game(object):
         self.chk_command_usable(player)
         if self.hand:
             raise PlayerError("You've already rolled a hand")
-        self.hand = sorted(Dice.roll())
+        self.hand = sorted(Dice.roll(5 if not self.maxi else 6))
         self.last_op = time()
         return self.hand
 
@@ -115,6 +120,9 @@ class Game(object):
         if not self.hand:
             raise PlayerError("Cannot move - you didn't roll a hand yet")
         score = self.scoreboard.commit_dice_combination(player, self.hand, move)
+        # In Maxi Yatzy - we keep saved rerolls
+        if self.maxi:
+            self.saved_rerolls[player] += (2 - self.reroll)
         self.rotate_turn()
         if self.scoreboard.is_finished():
             self.stop_game(player, True)
@@ -152,43 +160,35 @@ class Game(object):
 
     def reroll_check(self, player, query):
         """Reroll pre-checks"""
+        dice_count = 5 if not self.maxi else 6
         self.chk_command_usable(player)
         if not self.hand:
             raise PlayerError("Cannot reroll - you didn't roll a hand yet")
-        if len(query) > 5 or len(query) < 1:
-            raise PlayerError("You should select from 1 to 5 dice to reroll")
+        if len(query) > dice_count or len(query) < 1:
+            raise PlayerError("You should select from 1 to {0} dice to reroll".format(dice_count))
 
     def reroll_dice(self, player, dice):
         """Reroll dice by positions"""
         self.reroll_check(player, dice)
         for i in dice:
-            if i not in '12345':
-                raise PlayerError("You should specify numbers in range 1-5 to reroll")
+            if i not in '12345{0}'.format('6' if self.maxi else ""):
+                dc = 5 if not self.maxi else 6
+                raise PlayerError("You should specify numbers in range 1-{0} to reroll".format(dc))
         dice = ''.join(list(set(dice)))
         if self.reroll >= 2:
-            raise PlayerError("You cannot reroll more than twice!")
-        self.reroll += 1
+            if self.maxi:
+                if self.saved_rerolls[player]:
+                    self.saved_rerolls[player] -= 1
+                else:
+                    raise PlayerError("You cannot reroll more than twice (no saved rerolls)!")
+            else:
+                raise PlayerError("You cannot reroll more than twice!")
+        else:
+            self.reroll += 1
         for d in dice:
             self.hand[int(d) - 1] = Dice.roll_single()
         self.hand = sorted(self.hand)
         self.last_op = time()
-        return self.hand
-
-    def reroll_numbers(self, player, numbers):
-        """Reroll dice by value"""
-        self.reroll_check(player, numbers)
-        for i in numbers:
-            if i not in '123456':
-                raise PlayerError("You should specify numbers in range 1-6 to reroll")
-        to_reroll = [int(d) for d in numbers]
-        positions = []
-        for i in range(len(self.hand)):
-            if int(self.hand[i]) in to_reroll:
-                to_reroll.remove(int(self.hand[i]))
-                positions.append(i + 1)
-        if to_reroll or len(positions) < len(numbers):
-            raise PlayerError("Cannot reroll all requested numbers")
-        self.reroll_dice(player, ''.join([str(i) for i in positions]))
         return self.hand
 
     def reroll_pooled(self, player):
@@ -206,6 +206,8 @@ class Game(object):
         """Clear pooled dice"""
         self.chk_command_usable(player)
         self.reroll_pool = ['1', '2', '3', '4', '5']
+        if self.maxi:
+            self.reroll_pool.append('6')
 
     def reroll_pool_toggle(self, player, dice):
         """Toggle dice in reroll pool"""
@@ -256,7 +258,7 @@ class Game(object):
         if player != self.owner:
             raise PlayerError("Only owner can do this!")
         shuffle(self.players)
-        self.scoreboard = Scoreboard(self.players, self.yahtzee)
+        self.scoreboard = Scoreboard(self.players, self.yahtzee, self.forced, self.maxi)
         self.started = True
         self.last_op = time()
 
