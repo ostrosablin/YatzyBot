@@ -199,7 +199,7 @@ def roll(bot, update):
     update.message.reply_text(
         "{0} has rolled {1}\n\n"
         "Use /reroll to choose dice for reroll.\n\n"
-        "Use /move to choose a move.\n\n".format(player, ' '.join([d.to_emoji() for d in dice])),
+        "Use /move to choose a move.\n\n{2}".format(player, ' '.join([d.to_emoji() for d in dice]), saved),
         quote=False, isgroup=not is_private(update))
 
 
@@ -256,9 +256,13 @@ def reroll_process(bot, update):
                                       quote=False, isgroup=not is_private(update))
         elif arg == 'dr':
             dice = gamemanager.game(update.message.chat).reroll_pooled(player)
-            rerolllink = ""
-            if gamemanager.game(update.message.chat).reroll < 2:
-                rerolllink = "/reroll - Do reroll.\n\n"
+            rerolllink = "/reroll - Do reroll.\n\n"
+            if gamemanager.game(update.message.chat).reroll > 1:
+                if gamemanager.game(update.message.chat).maxi:
+                    if not gamemanager.game(update.message.chat).saved_rerolls[player]:
+                        rerolllink = ""
+                else:
+                    rerolllink = ""
             saved = ""
             if gamemanager.game(update.message.chat).maxi:
                 extra = gamemanager.game(update.message.chat).saved_rerolls[player]
