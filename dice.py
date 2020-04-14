@@ -43,7 +43,7 @@ class Dice(object):
             self.value = str(value)
         else:
             self.value = value
-        if str(value) not in VALUES:
+        if self.value not in VALUES:
             raise InvalidDiceError("Invalid dice value: %s" % self.value)
 
     def __str__(self):
