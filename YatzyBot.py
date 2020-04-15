@@ -197,7 +197,7 @@ def roll(bot, update):
         if extra:
             saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
     update.message.reply_text(
-        "{0} has rolled {1}\n\n"
+        "{0} has rolled (Roll 1/3):\n\n{1}\n\n"
         "Use /reroll to choose dice for reroll.\n\n"
         "Use /move to choose a move.\n\n{2}".format(player, ' '.join([d.to_emoji() for d in dice]), saved),
         quote=False, isgroup=not is_private(update))
@@ -221,10 +221,11 @@ def reroll(bot, update):
         extra = gamemanager.game(update.message.chat).saved_rerolls[player]
         if extra:
             saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
-    msg = "Reroll menu:\n\n{0}\n\n/rr - Reset reroll.\n\n/1 - Toggle reroll first dice.\n\n" \
+    rollnumber = gamemanager.game(update.message.chat).reroll + 1
+    msg = "Reroll menu (Roll {3}/3):\n\n{0}\n\n/rr - Reset reroll.\n\n/1 - Toggle reroll first dice.\n\n" \
           "/2 - Toggle reroll second dice.\n\n/3 - Toggle reroll third dice.\n\n/4 - Toggle reroll fourth dice.\n\n" \
           "/5 - Toggle reroll fifth dice.\n\n{1}/sa - Select all.\n\n/dr - Do reroll.\n\n" \
-          "/move - Choose a move.\n\n{2}".format(dice_to_wildcard(gamemanager.game(update.message.chat)), sixth, saved)
+          "/move - Choose a move.\n\n{2}".format(dice_to_wildcard(gamemanager.game(update.message.chat)), sixth, saved, rollnumber)
     if gamemanager.game(update.message.chat).reroll > 1:
         if not saved:  # We we don't have saved Maxi Yatzy turns
             msg = "You have already rerolled twice. Use /move command to finish your move."
@@ -268,9 +269,10 @@ def reroll_process(bot, update):
                 extra = gamemanager.game(update.message.chat).saved_rerolls[player]
                 if extra:
                     saved = "You have {0} extra saved reroll(s)\n\n".format(extra)
+            rollnumber = gamemanager.game(update.message.chat).reroll + 1
             update.message.reply_text(
-                "{0} has rolled {1}\n\n{2}/move - Do a move.\n\n{3}".format(player, ' '.join([d.to_emoji() for d in dice]),
-                                                                     rerolllink, saved),
+                "{0} has rolled (Roll {4}/3):\n\n{1}\n\n{2}/move - Do a move.\n\n{3}".format(player, ' '.join([d.to_emoji() for d in dice]),
+                                                                     rerolllink, saved, rollnumber),
                 quote=False, isgroup=not is_private(update))
         else:
             update.message.reply_text("Invalid reroll action", quote=False, isgroup=not is_private(update))
