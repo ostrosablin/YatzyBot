@@ -293,6 +293,10 @@ def commit(bot, update):
         output.append("/{0} {1} - {2} points.".format(MAP_COMMANDS[i], i, options[i]))
     if gamemanager.game(update.message.chat).reroll < 2:
         output.append("/reroll - Do reroll.")
+    else:
+        if gamemanager.game(update.message.chat).maxi:
+            if gamemanager.game(update.message.chat).saved_rerolls[player]:
+                output.append("/reroll - Do reroll.")
     table = '\n\n'.join(output)
     update.message.reply_text("Your scoring options:\n\n{1}".format(player, table), quote=False,
                               isgroup=not is_private(update))
