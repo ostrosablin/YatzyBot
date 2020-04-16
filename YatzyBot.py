@@ -217,7 +217,7 @@ def reroll(bot, update):
             saved = f"You have {extra} extra saved reroll(s).\n\n"
     rollnumber = gamemanager.game(update.message.chat).reroll
     msg = (f"Reroll menu (Reroll {rollnumber}/2):\n\n{dice_to_wildcard(gamemanager.game(update.message.chat))}\n\n"
-          f"{RESET_REROLL} /rr - Reset reroll.\n\n{dice[0].to_emoji()} /1 - Toggle reroll first dice.\n\n"
+          f"{RESET_REROLL} /rr - Reset reroll (deselect all).\n\n{dice[0].to_emoji()} /1 - Toggle reroll first dice.\n\n"
           f"{dice[1].to_emoji()} /2 - Toggle reroll second dice.\n\n{dice[2].to_emoji()} /3 - Toggle reroll third dice.\n\n"
           f"{dice[3].to_emoji()} /4 - Toggle reroll fourth dice.\n\n{dice[4].to_emoji()} /5 - Toggle reroll fifth dice.\n\n"
           f"{sixth}{SELECT_ALL} /sa - Select all.\n\n{DO_REROLL} /dr - Do reroll.\n\n"

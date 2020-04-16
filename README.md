@@ -11,6 +11,6 @@ To use the bot, clone the repo, install the dependencies, fill creds.py with you
 
 To play with a bot, add it to some group, then issue /start command. From there, you can select a game variant to play. Follow the instructions afterwards.
 
-Special thanks go to Lik for a fancy avatar for bot and help with beta testing.
+Special thanks go to Lik for a fancy avatar for bot, his continued help with beta testing and new ideas.
 
 Official copy of this bot runs as @YahtzeeYatzyBot in Telegram.
