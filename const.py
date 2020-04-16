@@ -31,6 +31,10 @@ START = "🚀"
 STOP = "⛔️"
 JOIN = "🎮"
 LEAVE = "🚪"
+ERROR = "⚠️"
+INFO = "💡"
+HELLO = "✋"
+CONGRATS = "🎉"
 
 # Move icons
 MOVE_ICONS = {'on': "1️⃣ ", 'ac': "1️⃣ ", 'tw': "2️⃣ ", 'th': "3️⃣ ", 'fo': "4️⃣ ", 'fi': "5️⃣ ", 'si': "6️⃣ ",
@@ -48,6 +52,10 @@ THREE = '3'
 FOUR = '4'
 FIVE = '5'
 SIX = '6'
+
+# Position emojis
+LOLLIPOP = '🍭'
+POSITIONS = {1: '🥇', 2: '🥈', 3: '🥉'}
 
 # Valid dice values
 VALUES = (ONE, TWO, THREE, FOUR, FIVE, SIX)

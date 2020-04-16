@@ -19,6 +19,7 @@
 
 from time import time
 
+from const import ERROR
 from error import PlayerError
 from game import Game, Player
 
@@ -34,7 +35,7 @@ class GameManager(object):
         if self.is_game_running(chat) or self.is_game_not_started(chat):
             if self.chats[chat.id].owner != self.player(owner):
                 if (time() - 600) < self.chats[chat.id].last_op:
-                    raise PlayerError("Only owner can do that!")
+                    raise PlayerError(f"{ERROR} Only owner can do that!")
         self.chats[chat.id] = Game(chat.id, self.player(owner), yahtzee, forced, maxi)
 
     def is_game_not_started(self, chat):

@@ -23,6 +23,7 @@ from collections import Counter, OrderedDict
 
 from tabulate import tabulate
 
+from const import POSITIONS, LOLLIPOP
 from error import IllegalMoveError
 
 
@@ -249,8 +250,7 @@ class Scoreboard(object):
         for player in scores:
             if scores[player] == last_score:
                 place = max(1, place - 1)
-            output.append(
-                "{0}{1} place - {2} ({3} points)".format(place, suffix.get(place, 'th'), player, scores[player]))
+            output.append(f"{POSITIONS.get(place, LOLLIPOP)}{place}{suffix.get(place, 'th')} place - {player} ({scores[player]} points)")
             place += 1
             last_score = scores[player]
         return '\n'.join(output)
