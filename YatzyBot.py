@@ -23,6 +23,8 @@ from telegram import ParseMode, bot
 from telegram.ext import Updater, CommandHandler, messagequeue
 from telegram.utils.request import Request
 
+from const import (WILDCARD_DICE, ROLL, MOVE, SCORE, SCORE_ALL, RESET_REROLL, SELECT_ALL, DO_REROLL, HELP, START, STOP, JOIN, LEAVE,
+                   MOVE_BOX_ICONS, MAP_TURNS, MAP_COMMANDS)
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
 from gamemanager import GameManager
@@ -32,27 +34,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 gamemanager = GameManager()
-
-WILDCARD_DICE = "*️⃣"
-ROLL = "🎲"
-MOVE = "🎰"
-SCORE = "📝"
-SCORE_ALL = "🏆"
-RESET_REROLL = "❌"
-SELECT_ALL = WILDCARD_DICE
-DO_REROLL = "✅"
-HELP = "❓"
-START = "🚀"
-STOP = "⛔️"
-JOIN = "🎮"
-LEAVE = "🚪"
-MAP_TURNS = {'on': "Ones", 'ac': "Aces", 'tw': "Twos", 'th': "Threes", 'fo': "Fours", 'fi': "Fives", 'si': "Sixes",
-             'op': "One Pair", 'tp': "Two Pairs", '3p': "Three Pairs",
-             'tk': "Three of a Kind", 'fk': "Four of a Kind", '5k': "Five of a Kind",
-             'fh': "Full House", 'ca': "Castle", 'to': "Tower",
-             'ss': "Small Straight", 'ls': "Large Straight", 'fs': "Full Straight",
-             'ch': "Chance", 'ya': "Yatzy", 'yh': "Yahtzee", 'my': "Maxi Yatzy"}
-MAP_COMMANDS = {v: k for k, v in MAP_TURNS.items()}
 
 
 def dice_to_wildcard(game):

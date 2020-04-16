@@ -19,18 +19,8 @@
 
 from random import randint
 
+from const import VALUES, EMOJIS
 from error import InvalidDiceError
-
-# Values
-ONE = '1'
-TWO = '2'
-THREE = '3'
-FOUR = '4'
-FIVE = '5'
-SIX = '6'
-
-VALUES = (ONE, TWO, THREE, FOUR, FIVE, SIX)
-EMOJIS = {'1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣'}
 
 
 class Dice(object):

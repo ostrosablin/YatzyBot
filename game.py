@@ -21,11 +21,10 @@ from collections import UserString, defaultdict
 from time import time
 from random import shuffle
 
+from const import START
 from dice import Dice
 from error import PlayerError
 from scoreboard import Scoreboard
-
-START = "🚀"
 
 class Game(object):
     """This class represents a Yatzy/Yahtzee game"""
