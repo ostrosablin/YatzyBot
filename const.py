@@ -37,7 +37,6 @@ MOVE_ICONS = {'on': "1️⃣ ", 'ac': "1️⃣ ", 'tw': "2️⃣ ", 'th': "3️�
               'op': "👨‍👦", 'tp': "👨‍👨‍👦‍👦", '3p': "👨‍👦‍👦", 'tk': "🇨🇦", 'fk': "🇬🇪", '5k': "🇰🇷",
               'fh': "🏠", 'ca': "🏰", 'to': "🗼", 'ss': "▶️", 'ls': "⏩", 'fs': "⏭", 'ch': "❓",
               'ya': "💎", 'yh': "💎", 'my': "💎"}
-MOVE_BOX_ICONS = {MAP_TURNS[k]: v for k, v in MOVE_ICONS.items()}
 
 # Dice faces (string-to-emoji mapping)
 EMOJIS = {'1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣'}
@@ -61,3 +60,4 @@ MAP_TURNS = {'on': "Ones", 'ac': "Aces", 'tw': "Twos", 'th': "Threes", 'fo': "Fo
              'ss': "Small Straight", 'ls': "Large Straight", 'fs': "Full Straight",
              'ch': "Chance", 'ya': "Yatzy", 'yh': "Yahtzee", 'my': "Maxi Yatzy"}
 MAP_COMMANDS = {v: k for k, v in MAP_TURNS.items()}
+MOVE_BOX_ICONS = {MAP_TURNS[k]: v for k, v in MOVE_ICONS.items()}

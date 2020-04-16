@@ -287,7 +287,7 @@ def commit(bot, update):
         return
     output = []
     for i in options:
-        output.append(f"{MOVE} /{MAP_COMMANDS[i]} {i} - {options[i]} points.")
+        output.append(f"{MOVE_BOX_ICONS[i]} /{MAP_COMMANDS[i]} {i} - {options[i]} points.")
     if gamemanager.game(update.message.chat).reroll < 2:
         output.append(f"{ROLL} /reroll - Do reroll.")
     else:
