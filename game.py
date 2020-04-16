@@ -25,6 +25,7 @@ from dice import Dice
 from error import PlayerError
 from scoreboard import Scoreboard
 
+START = "🚀"
 
 class Game(object):
     """This class represents a Yatzy/Yahtzee game"""
@@ -51,20 +52,20 @@ class Game(object):
     def add_player(self, player):
         """Add a new player"""
         if self.started:
-            raise PlayerError("Cannot add a player into started game")
+            raise PlayerError("Cannot add a player into started game.")
         if player in self.players:
-            raise PlayerError("You've already joined")
+            raise PlayerError("You've already joined.")
         self.players.append(player)
 
     def del_player(self, player):
         """Remove a player"""
         if self.started:
-            raise PlayerError("Cannot remove a player from started game")
+            raise PlayerError("Cannot remove a player from started game.")
         if player not in self.players:
-            raise PlayerError("You're not in game")
+            raise PlayerError("You're not in game.")
         if player == self.owner:
             self.stop_game(player)
-            raise PlayerError("Owner has left the game, game is aborted")
+            raise PlayerError("Owner has left the game, game is aborted.")
         self.players.remove(player)
 
     def is_current_turn(self, player):
@@ -92,17 +93,17 @@ class Game(object):
     def chk_command_usable(self, player):
         """Check if command can be used"""
         if not self.started:
-            raise PlayerError("This game is not started")
+            raise PlayerError(f"This game is not started (try {START} /start).")
         if self.finished:
-            raise PlayerError("This game is already finished, create a new game")
+            raise PlayerError(f"This game is already finished, create a new game (try {START} /start).")
         if not self.is_current_turn(player):
-            raise PlayerError("It's not your turn")
+            raise PlayerError("It's not your turn.")
 
     def roll(self, player):
         """Roll a dice (initial)"""
         self.chk_command_usable(player)
         if self.hand:
-            raise PlayerError("You've already rolled a hand")
+            raise PlayerError("You've already rolled a hand.")
         self.hand = sorted(Dice.roll(5 if not self.maxi else 6))
         self.last_op = time()
         return self.hand
@@ -111,14 +112,14 @@ class Game(object):
         """Get a list of possible ways to score your hand (in descending score order)"""
         self.chk_command_usable(player)
         if not self.hand:
-            raise PlayerError("Cannot get move list - you didn't roll a hand yet")
+            raise PlayerError("Cannot get move list - you didn't roll a hand yet.")
         return self.scoreboard.get_score_options(player, self.hand)
 
     def commit_turn(self, player, move):
         """Commit a move and record it in scoreboard"""
         self.chk_command_usable(player)
         if not self.hand:
-            raise PlayerError("Cannot move - you didn't roll a hand yet")
+            raise PlayerError("Cannot move - you didn't roll a hand yet.")
         score = self.scoreboard.commit_dice_combination(player, self.hand, move)
         # In Maxi Yatzy - we keep saved rerolls
         if self.maxi:
@@ -163,9 +164,9 @@ class Game(object):
         dice_count = 5 if not self.maxi else 6
         self.chk_command_usable(player)
         if not self.hand:
-            raise PlayerError("Cannot reroll - you didn't roll a hand yet")
+            raise PlayerError("Cannot reroll - you didn't roll a hand yet.")
         if len(query) > dice_count or len(query) < 1:
-            raise PlayerError("You should select from 1 to {0} dice to reroll".format(dice_count))
+            raise PlayerError("You should select from 1 to {0} dice to reroll.".format(dice_count))
 
     def reroll_dice(self, player, dice):
         """Reroll dice by positions"""
@@ -173,7 +174,7 @@ class Game(object):
         for i in dice:
             if i not in '12345{0}'.format('6' if self.maxi else ""):
                 dc = 5 if not self.maxi else 6
-                raise PlayerError("You should specify numbers in range 1-{0} to reroll".format(dc))
+                raise PlayerError("You should specify numbers in range 1-{0} to reroll.".format(dc))
         dice = ''.join(list(set(dice)))
         if self.reroll >= 2:
             if self.maxi:
@@ -212,7 +213,7 @@ class Game(object):
     def reroll_pool_toggle(self, player, dice):
         """Toggle dice in reroll pool"""
         if len(dice) != 1:
-            raise PlayerError("You should specify a single dice to reroll")
+            raise PlayerError("You should specify a single dice to reroll.")
         self.reroll_check(player, dice)
         if dice in self.reroll_pool:
             self.reroll_pool.remove(dice)
@@ -222,19 +223,19 @@ class Game(object):
     def reroll_pool_add(self, player, dice):
         """Add dice to reroll pool"""
         if len(dice) != 1:
-            raise PlayerError("You should specify a single dice to reroll")
+            raise PlayerError("You should specify a single dice to reroll.")
         self.reroll_check(player, dice)
         if dice in self.reroll_pool:
-            raise PlayerError("This dice is already queued for reroll")
+            raise PlayerError("This dice is already queued for reroll.")
         self.reroll_pool.append(dice)
 
     def reroll_pool_del(self, player, dice):
         """Remove dice from reroll pool"""
         if len(dice) != 1:
-            raise PlayerError("You should specify a single dice to reroll")
+            raise PlayerError("You should specify a single dice to reroll.")
         self.reroll_check(player, dice)
         if dice not in self.reroll_pool:
-            raise PlayerError("This dice is not queued for reroll")
+            raise PlayerError("This dice is not queued for reroll.")
         self.reroll_pool.remove(dice)
 
     def hand_to_str(self, player):
@@ -252,9 +253,9 @@ class Game(object):
     def start_game(self, player):
         """Begin game"""
         if self.finished:
-            raise PlayerError("This game is already finished")
+            raise PlayerError(f"This game is already finished (try {START} /start).")
         if len(self.players) < 1:
-            raise PlayerError("At least one person should join a game to start")
+            raise PlayerError("At least one person should join a game to start.")
         if player != self.owner:
             raise PlayerError("Only owner can do this!")
         shuffle(self.players)
