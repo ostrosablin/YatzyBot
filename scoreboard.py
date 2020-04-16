@@ -23,7 +23,7 @@ from collections import Counter, OrderedDict
 
 from tabulate import tabulate
 
-from const import POSITIONS, LOLLIPOP
+from const import POSITIONS, LOLLIPOP, ERROR
 from error import IllegalMoveError
 
 
@@ -175,7 +175,7 @@ class Scoreboard(object):
         """Commit dice combination"""
         options = self.get_score_options(player, dice)
         if boxname not in options:
-            raise IllegalMoveError("This move is not allowed in this situation")
+            raise IllegalMoveError(f"{ERROR} This move is not allowed in this situation.")
         score = 0
         # Special Yahtzee rules
         if self.yahtzee:
