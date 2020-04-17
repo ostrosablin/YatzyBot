@@ -29,12 +29,12 @@ class Dice(object):
     def __init__(self, value=None):
         if value is None:
             self.value = str(randint(1, 6))
-        elif type(value) == int:
+        elif isinstance(value, int):
             self.value = str(value)
         else:
             self.value = value
         if self.value not in VALUES:
-            raise InvalidDiceError("Invalid dice value: %s" % self.value)
+            raise InvalidDiceError(f"Invalid dice value: {self.value}")
 
     def __str__(self):
         return self.value

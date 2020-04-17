@@ -37,13 +37,41 @@ HELLO = "✋"
 CONGRATS = "🎉"
 
 # Move icons
-MOVE_ICONS = {'on': "1️⃣ ", 'ac': "1️⃣ ", 'tw': "2️⃣ ", 'th': "3️⃣ ", 'fo': "4️⃣ ", 'fi': "5️⃣ ", 'si': "6️⃣ ",
-              'op': "👨‍👦", 'tp': "👨‍👨‍👦‍👦", '3p': "👨‍👦‍👦", 'tk': "🇨🇦", 'fk': "🇬🇪", '5k': "🇰🇷",
-              'fh': "🏠", 'ca': "🏰", 'to': "🗼", 'ss': "▶️", 'ls': "⏩", 'fs': "⏭", 'ch': "❓",
-              'ya': "💎", 'yh': "💎", 'my': "💎"}
+MOVE_ICONS = {
+    'on': "1️⃣ ",
+    'ac': "1️⃣ ",
+    'tw': "2️⃣ ",
+    'th': "3️⃣ ",
+    'fo': "4️⃣ ",
+    'fi': "5️⃣ ",
+    'si': "6️⃣ ",
+    'op': "👨‍👦",
+    'tp': "👨‍👨‍👦‍👦",
+    '3p': "👨‍👦‍👦",
+    'tk': "🇨🇦",
+    'fk': "🇬🇪",
+    '5k': "🇰🇷",
+    'fh': "🏠",
+    'ca': "🏰",
+    'to': "🗼",
+    'ss': "▶️",
+    'ls': "⏩",
+    'fs': "⏭",
+    'ch': "❓",
+    'ya': "💎",
+    'yh': "💎",
+    'my': "💎"
+}
 
 # Dice faces (string-to-emoji mapping)
-EMOJIS = {'1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣'}
+EMOJIS = {
+    '1': '1️⃣',
+    '2': '2️⃣',
+    '3': '3️⃣',
+    '4': '4️⃣',
+    '5': '5️⃣',
+    '6': '6️⃣'
+}
 
 # Dice faces (strings)
 ONE = '1'
@@ -61,11 +89,32 @@ POSITIONS = {1: '🥇', 2: '🥈', 3: '🥉'}
 VALUES = (ONE, TWO, THREE, FOUR, FIVE, SIX)
 
 # Mappings of commands to scoreboard boxes and vice versa
-MAP_TURNS = {'on': "Ones", 'ac': "Aces", 'tw': "Twos", 'th': "Threes", 'fo': "Fours", 'fi': "Fives", 'si': "Sixes",
-             'op': "One Pair", 'tp': "Two Pairs", '3p': "Three Pairs",
-             'tk': "Three of a Kind", 'fk': "Four of a Kind", '5k': "Five of a Kind",
-             'fh': "Full House", 'ca': "Castle", 'to': "Tower",
-             'ss': "Small Straight", 'ls': "Large Straight", 'fs': "Full Straight",
-             'ch': "Chance", 'ya': "Yatzy", 'yh': "Yahtzee", 'my': "Maxi Yatzy"}
+MAP_TURNS = {
+    'on': "Ones",
+    'ac': "Aces",
+    'tw': "Twos",
+    'th': "Threes",
+    'fo': "Fours",
+    'fi': "Fives",
+    'si': "Sixes",
+    'op': "One Pair",
+    'tp': "Two Pairs",
+    '3p': "Three Pairs",
+    'tk': "Three of a Kind",
+    'fk': "Four of a Kind",
+    '5k': "Five of a Kind",
+    'fh': "Full House",
+    'ca': "Castle",
+    'to': "Tower",
+    'ss': "Small Straight",
+    'ls': "Large Straight",
+    'fs': "Full Straight",
+    'ch': "Chance",
+    'ya': "Yatzy",
+    'yh': "Yahtzee",
+    'my': "Maxi Yatzy"
+}
+
+# Generated mappings
 MAP_COMMANDS = {v: k for k, v in MAP_TURNS.items()}
 MOVE_BOX_ICONS = {MAP_TURNS[k]: v for k, v in MOVE_ICONS.items()}

@@ -36,7 +36,8 @@ class GameManager(object):
             if self.chats[chat.id].owner != self.player(owner):
                 if (time() - 600) < self.chats[chat.id].last_op:
                     raise PlayerError(f"{ERROR} Only owner can do that!")
-        self.chats[chat.id] = Game(chat.id, self.player(owner), yahtzee, forced, maxi)
+        self.chats[chat.id] = Game(
+            chat.id, self.player(owner), yahtzee, forced, maxi)
 
     def is_game_not_started(self, chat):
         if chat.id in self.chats and self.chats[chat.id].is_game_not_started():
