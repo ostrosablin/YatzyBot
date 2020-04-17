@@ -35,6 +35,7 @@ ERROR = "⚠️"
 INFO = "💡"
 HELLO = "✋"
 CONGRATS = "🎉"
+OWNER = "👮‍♂️"
 
 # Move icons
 MOVE_ICONS = {

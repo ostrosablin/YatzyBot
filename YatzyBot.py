@@ -41,6 +41,7 @@ from const import (
     INFO,
     HELLO,
     CONGRATS,
+    OWNER,
     MOVE_BOX_ICONS,
     MAP_TURNS,
     MAP_COMMANDS)
@@ -152,7 +153,7 @@ def startgame(_, update, yahtzee, forced=False, maxi=False):
             f"{CONGRATS} Success! You've created and joined a new {game} game!"
             f"\n\nOthers can join using {JOIN} /join command.\n\n"
             f"When all set - use {START} /start to begin.\n\n"
-            f"Game owner: {player}", quote=False,
+            f"{OWNER} Game owner: {player}", quote=False,
             isgroup=not is_private(update)
         )
 
