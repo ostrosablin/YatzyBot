@@ -324,7 +324,7 @@ def commit_move(bot, update):
             player = gamemanager.game(update.message.chat).get_current_player()
             extra = gamemanager.game(update.message.chat).saved_rerolls[player]
             if extra:
-                saved = f"You have {extra} extra saved reroll(s)\n\n"
+                saved = f"You have {extra} extra saved reroll(s).\n\n"
         update.message.reply_text(
             f"{INFO} Current turn: {gamemanager.current_turn(update.message.chat)}\n\nUse {ROLL} /roll to roll dice.\n\n"
             f"Use {SCORE} /score to view your scoreboard.\n\nUse {SCORE_ALL} /score_all to view everyone's total score.\n\n{saved}",
