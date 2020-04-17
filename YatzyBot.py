@@ -278,7 +278,7 @@ def roll(_, update):
     if gamemanager.game(update.message.chat).maxi:
         extra = gamemanager.game(update.message.chat).saved_rerolls[player]
         if extra:
-            saved = f"You have {extra} extra saved reroll(s).\n\n"
+            saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
     update.message.reply_text(
         f"{ROLL} {player} has rolled (Reroll 0/2):\n\n"
         f"{' '.join([d.to_emoji() for d in dice])}\n\n"
@@ -309,7 +309,7 @@ def reroll(_, update):
         sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
         extra = gamemanager.game(update.message.chat).saved_rerolls[player]
         if extra:
-            saved = f"You have {extra} extra saved reroll(s).\n\n"
+            saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
     rollnumber = gamemanager.game(update.message.chat).reroll
     msg = (f"{ROLL} Reroll menu (Reroll {rollnumber}/2):\n\n"
            f"{dice_to_wildcard(gamemanager.game(update.message.chat))}\n\n"
@@ -383,7 +383,10 @@ def reroll_process(_, update):
                 extra = gamemanager.game(
                     update.message.chat).saved_rerolls[player]
                 if extra:
-                    saved = f"You have {extra} extra saved reroll(s).\n\n"
+                    saved = (
+                        f"{INFO} You have {extra} "
+                        f"extra saved reroll(s).\n\n"
+                    )
             rollnumber = gamemanager.game(update.message.chat).reroll
             update.message.reply_text(
                 f"{ROLL} {player} has rolled (Reroll {rollnumber}/2):\n\n"
@@ -437,6 +440,11 @@ def commit_move(_, update):
     if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
+    acquired_extra = ""
+    if gamemanager.game(update.message.chat).maxi:
+        saved_rerolls = (2 - gamemanager.game(update.message.chat).reroll)
+        if saved_rerolls:
+            acquired_extra = f"{INFO} Saved +{saved_rerolls} extra reroll(s)"
     try:
         score_pos = gamemanager.game(
             update.message.chat).commit_turn(
@@ -447,7 +455,8 @@ def commit_move(_, update):
             str(e), quote=False, isgroup=not is_private(update))
         return
     update.message.reply_text(
-        f"{MOVE} {player} scores {MAP_TURNS[arg]} for {score_pos} points.\n\n",
+        f"{MOVE} {player} scores {MAP_TURNS[arg]} for {score_pos} points.\n\n"
+        f"{acquired_extra}",
         quote=False, isgroup=not is_private(update)
     )
     update.message.reply_text(
@@ -468,7 +477,7 @@ def commit_move(_, update):
             player = gamemanager.game(update.message.chat).get_current_player()
             extra = gamemanager.game(update.message.chat).saved_rerolls[player]
             if extra:
-                saved = f"You have {extra} extra saved reroll(s).\n\n"
+                saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
         update.message.reply_text(
             f"{INFO} Current turn: "
             f"{gamemanager.current_turn(update.message.chat)}\n\n"
