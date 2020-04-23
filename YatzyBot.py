@@ -43,6 +43,7 @@ from const import (
     CONGRATS,
     OWNER,
     MOVE_BOX_ICONS,
+    MOVE_ICONS,
     MAP_TURNS,
     MAP_COMMANDS)
 from creds import TOKEN, REQUEST_KWARGS
@@ -456,7 +457,8 @@ def commit_move(_, update):
             str(e), quote=False, isgroup=not is_private(update))
         return
     update.message.reply_text(
-        f"{MOVE} {player} scores {MAP_TURNS[arg]} for {score_pos} points.\n\n"
+        f"{MOVE} {player} scores {MOVE_ICONS[arg]} {MAP_TURNS[arg]}"
+        f" for {score_pos} points.\n\n"
         f"{acquired_extra}",
         quote=False, isgroup=not is_private(update)
     )
