@@ -219,19 +219,25 @@ def stop(_, update):
             str(e), quote=False, isgroup=not is_private(update))
 
 
-def join(_, update):
+def roster_check(update):
     if not gamemanager.is_game_created(update.message.chat):
         update.message.reply_text(
             f"{ERROR} Game doesn't exist (try {START} /start).", quote=False,
             isgroup=not is_private(update)
         )
-        return
+        return False
     if gamemanager.game(update.message.chat).finished:
         update.message.reply_text(
             f"{ERROR} This game is already finished, create a new game "
             f"(try {START} /start).", quote=False,
             isgroup=not is_private(update)
         )
+        return False
+    return True
+
+
+def join(_, update):
+    if not roster_check(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
@@ -251,18 +257,7 @@ def join(_, update):
 
 
 def leave(_, update):
-    if not gamemanager.is_game_created(update.message.chat):
-        update.message.reply_text(
-            f"{ERROR} Game doesn't exist (try {START} /start).", quote=False,
-            isgroup=not is_private(update)
-        )
-        return
-    if gamemanager.game(update.message.chat).finished:
-        update.message.reply_text(
-            f"{ERROR} This game is already finished, create a new game "
-            f"(try {START} /start).", quote=False,
-            isgroup=not is_private(update)
-        )
+    if not roster_check(update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
