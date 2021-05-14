@@ -294,6 +294,7 @@ def roll(_, update):
         f"{ROLL} {player} has rolled (Reroll 0/2):\n\n"
         f"{' '.join([d.to_emoji() for d in dice])}\n\n"
         f"Use {ROLL} /reroll to choose dice for reroll.\n\n"
+        f"Use {ROLL} /qr <positions> to do a quick reroll.\n\n"
         f"Use {MOVE} /move to choose a move.\n\n{saved}",
         quote=False, isgroup=not is_private(update))
 
@@ -343,7 +344,7 @@ def reroll(_, update):
     update.message.reply_text(msg, quote=False, isgroup=not is_private(update))
 
 
-def reroll_process(_, update):
+def reroll_process(_, update, args):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
     if not chk_game_runs(update):
         return
@@ -379,9 +380,17 @@ def reroll_process(_, update):
                 f"{dice_to_wildcard(gamemanager.game(update.message.chat))}",
                 quote=False, isgroup=not is_private(update)
             )
-        elif arg == 'dr':
-            dice = gamemanager.game(update.message.chat).reroll_pooled(player)
-            rerolllink = f"{ROLL} /reroll - Do reroll.\n\n"
+        elif arg == 'dr' or arg == 'qr':
+            if arg == 'qr':
+                to_reroll = "".join(args)
+                dice = gamemanager.game(
+                    update.message.chat).reroll_dice(player, to_reroll)
+                gamemanager.game(update.message.chat).reroll_pool_clear(player)
+            else:
+                dice = gamemanager.game(
+                    update.message.chat).reroll_pooled(player)
+            rerolllink = f"{ROLL} /reroll - Do reroll.\n\n" \
+                         f"{ROLL} /qr - Do a quick reroll.\n\n"
             if gamemanager.game(update.message.chat).reroll > 1:
                 if gamemanager.game(update.message.chat).maxi:
                     if not gamemanager.game(
@@ -435,10 +444,12 @@ def commit(_, update):
         )
     if gamemanager.game(update.message.chat).reroll < 2:
         output.append(f"{ROLL} /reroll - Do reroll.")
+        output.append(f"{ROLL} /qr - Do a quick reroll.\n\n")
     else:
         if gamemanager.game(update.message.chat).maxi:
             if gamemanager.game(update.message.chat).saved_rerolls[player]:
                 output.append(f"{ROLL} /reroll - Do reroll.")
+                output.append(f"{ROLL} /qr - Do a quick reroll.\n\n")
     table = '\n\n'.join(output)
     update.message.reply_text(
         f"{MOVE} Your scoring options:\n\n{table}", quote=False,
@@ -605,8 +616,8 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('score_all', score_all))
     updater.dispatcher.add_handler(
         CommandHandler(
-            ['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa'],
-            reroll_process))
+            ['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa', 'qr'],
+            reroll_process, pass_args=True))
     updater.dispatcher.add_handler(
         CommandHandler(
             ['on', 'ac', 'tw', 'th', 'fo', 'fi',
