@@ -382,7 +382,23 @@ def reroll_process(_, update, args):
             )
         elif arg == 'dr' or arg == 'qr':
             if arg == 'qr':
-                to_reroll = "".join(args)
+                to_reroll = "".join(args).lower()
+                maxi = gamemanager.game(update.message.chat).maxi
+                if "a" in to_reroll or "-" in to_reroll:
+                    to_reroll = f"12345{'6' if maxi else ''}"
+                if "h" in to_reroll or "!" in to_reroll:
+                    allowed = f"12345{'6' if maxi else ''}"
+                    inverse = list(allowed)
+                    for char in to_reroll:
+                        if char in allowed:
+                            if char in inverse:
+                                inverse.remove(char)
+                        elif char in "h!":
+                            pass
+                        else:
+                            inverse.append(char)
+                            break
+                    to_reroll = "".join(inverse)
                 dice = gamemanager.game(
                     update.message.chat).reroll_dice(player, to_reroll)
                 gamemanager.game(update.message.chat).reroll_pool_clear(player)
