@@ -344,8 +344,9 @@ def reroll(_, update):
     update.message.reply_text(msg, quote=False, isgroup=not is_private(update))
 
 
-def reroll_process(_, update, args):
+def reroll_process(_, update):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
+    args = update.message.text.strip().split(None)[1:]
     if not chk_game_runs(update):
         return
     player = gamemanager.player(update.message.from_user)
@@ -647,7 +648,7 @@ def main():
     updater.dispatcher.add_handler(
         CommandHandler(
             ['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa', 'qr'],
-            reroll_process, pass_args=True))
+            reroll_process))
     updater.dispatcher.add_handler(
         CommandHandler(
             ['on', 'ac', 'tw', 'th', 'fo', 'fi',
