@@ -383,6 +383,20 @@ def reroll_process(_, update, args):
         elif arg == 'dr' or arg == 'qr':
             if arg == 'qr':
                 to_reroll = "".join(args).lower()
+                if not to_reroll:
+                    raise PlayerError(
+                        f"{ERROR} This is a quick reroll command: it requires "
+                        f"arguments and cannot be used without any like that. "
+                        f"You should pass positions of dice to reroll.\n\n"
+                        f"To reroll specific dice (e.g. first three), just "
+                        f"type their positions, like that:\n\n"
+                        f"/qr 123\n\n"
+                        f"To reroll all dice, any of these commands will work:"
+                        f"\n\n/qr a\n/qr all\n/qr -\n\n"
+                        f"If you wish to hold particular dice (e.g. keep last "
+                        f"two), and reroll others, any of these will work:"
+                        f"\n\n/qr h45\n/qr !45"
+                    )
                 maxi = gamemanager.game(update.message.chat).maxi
                 if "a" in to_reroll or "-" in to_reroll:
                     to_reroll = f"12345{'6' if maxi else ''}"
