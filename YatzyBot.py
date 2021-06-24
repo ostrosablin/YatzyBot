@@ -261,18 +261,61 @@ def leave(_, update):
         return
     player = gamemanager.player(update.message.from_user)
     try:
+        is_lobby = not gamemanager.game(update.message.chat).started
+        turn = None
+        if not is_lobby:
+            turn = gamemanager.game(update.message.chat).get_current_player()
         gamemanager.game(update.message.chat).del_player(player)
-        logger.info(
-            f"{player} has left a game - chat_id {update.message.chat.id}"
-        )
+        is_finished = gamemanager.game(update.message.chat).finished
+        switch_turn = not is_finished and turn == player
     except PlayerError as e:
         update.message.reply_text(
             str(e), quote=False, isgroup=not is_private(update))
         return
+    lobby = " lobby" if is_lobby else ""
+    logger.info(
+        f"{player} has left a game{lobby} - chat_id {update.message.chat.id}"
+    )
     update.message.reply_text(
-        f"{LEAVE} {player} has left the game!", quote=False,
+        f"{LEAVE} {player} has left the game{lobby}!", quote=False,
         isgroup=not is_private(update)
     )
+    if is_finished:
+        update.message.reply_text(
+            f"{STOP} Last player has left the game. Game is over.",
+            quote=False, isgroup=not is_private(update)
+        )
+    if not is_lobby:
+        scoreall_msg = f"{SCORE_ALL} Current total scores:\n\n"
+        if is_finished:
+            scoreall_msg = f"{CONGRATS} The game has ended! Final scores:\n\n"
+        scores = gamemanager.game(update.message.chat).scores_player(player)
+        update.message.reply_text(
+            f"{SCORE} Scoreboard for {player}:\n\n`{scores}`", quote=False,
+            parse_mode=ParseMode.MARKDOWN, isgroup=not is_private(update)
+        )
+        update.message.reply_text(
+            f'{scoreall_msg}'
+            f'{gamemanager.game(update.message.chat).scores_final()}',
+            quote=False, isgroup=not is_private(update)
+        )
+        if not switch_turn:
+            return
+        player = turn
+        saved = ""
+        if gamemanager.game(update.message.chat).maxi:
+            extra = gamemanager.game(update.message.chat).saved_rerolls[player]
+            if extra:
+                saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
+        update.message.reply_text(
+            f"{INFO} Current turn: "
+            f"{gamemanager.current_turn(update.message.chat)}\n\n"
+            f"Use {ROLL} /roll to roll dice.\n\n"
+            f"Use {SCORE} /score to view your scoreboard.\n\n"
+            f"Use {SCORE_ALL} /score_all to view everyone's total score.\n\n"
+            f"{saved}",
+            quote=False, isgroup=not is_private(update)
+        )
 
 
 def roll(_, update):

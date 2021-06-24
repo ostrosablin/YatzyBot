@@ -59,14 +59,23 @@ class Game(object):
             )
         if player in self.players:
             raise PlayerError(f"{ERROR} You've already joined.")
+        player.activate(self)
         self.players.append(player)
 
     def del_player(self, player):
         """Remove a player"""
         if self.started:
-            raise PlayerError(
-                f"{ERROR} Cannot remove a player from started game."
-            )
+            if player.is_active(self):
+                self.scoreboard.zero_scoreboard(player)
+                player.deactivate(self)
+                if not self.has_active_players():
+                    self.stop_game(player, True)
+                    return
+                if player == self.get_current_player():
+                    self.rotate_turn()
+                return
+            else:
+               raise PlayerError(f"{ERROR} You have already left the game.")
         if player not in self.players:
             raise PlayerError(f"{ERROR} You're not in game.")
         if player == self.owner:
@@ -75,6 +84,12 @@ class Game(object):
                 f"{STOP} Owner has left the game, game is aborted."
             )
         self.players.remove(player)
+
+    def has_active_players(self):
+        for player in self.players:
+            if player.is_active(self):
+                return True
+        return False
 
     def is_current_turn(self, player):
         """Check, whether it's a turn of this player"""
@@ -97,6 +112,8 @@ class Game(object):
         self.hand = None
         self.reroll_pool = []
         self.reroll = 0
+        if not self.get_current_player().is_active(self):
+            self.rotate_turn()
 
     def chk_command_usable(self, player):
         """Check if command can be used"""
@@ -318,6 +335,7 @@ class Game(object):
         self.started = False
         self.finished = True
         self.last_op = 0
+        self.players = []
 
 
 class Player(UserString):
@@ -330,4 +348,14 @@ class Player(UserString):
             name.append(user.last_name)
         if user.username:
             name.append(f"({user.username})")
+        self.active = {}
         UserString.__init__(self, " ".join(name))
+
+    def deactivate(self, game):
+        self.active[game] = False
+
+    def activate(self, game):
+        self.active[game] = True
+
+    def is_active(self, game):
+        return self.active.get(game, True)

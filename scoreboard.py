@@ -196,6 +196,12 @@ class Scoreboard(object):
                 return bonus
         return 0
 
+    def zero_scoreboard(self, player):
+        for box in list(self.scores[player].values()):
+            if box.score is None:
+                box.set_score(0)
+        self.recompute_calculated_fields(player)
+
     def recompute_calculated_fields(self, player):
         """Compute all calculated boxes"""
         # Recompute Upper Section Totals
