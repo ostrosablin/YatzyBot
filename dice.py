@@ -62,14 +62,14 @@ class Dice(object):
     def from_str(cls, string):
         """Decodes a Dice object(s) from a string"""
         dice = []
-        for i in string:
-            dice.append(Dice(i))
+        for char in string:
+            dice.append(Dice(char))
         return dice
 
     @classmethod
     def roll(cls, n=5):
         dice = []
-        for i in range(n):
+        for _ in range(n):
             dice.append(Dice())
         return dice
 

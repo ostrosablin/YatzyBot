@@ -406,12 +406,12 @@ class Box(object):
         """Count a sum for dice in N of a Kind"""
         ctr = count_dice(dice)
         max_suitable = 0
-        for i in ctr:
-            if ctr[i] >= n:
+        for die in ctr:
+            if ctr[die] >= n:
                 if yahtzee:  # In Yahtzee, all hand is counted
                     return sum([int(d) for d in dice])
                 else:
-                    max_suitable = max(int(i), max_suitable)
+                    max_suitable = max(int(die), max_suitable)
         return max_suitable * n
 
     @classmethod
@@ -420,8 +420,8 @@ class Box(object):
         roll = sort_and_dedupe(dice)
         score = {4: 30, 5: 40}
         seq = 0
-        for i in range(len(roll) - 1):
-            if roll[i] + 1 == roll[i + 1]:
+        for die in range(len(roll) - 1):
+            if roll[die] + 1 == roll[die + 1]:
                 seq = max(seq + 1, 2)
             else:
                 seq = 0
@@ -444,13 +444,13 @@ class Box(object):
         ctr = count_dice(dice)
         expected = sorted(groups)
         totals = 0
-        for i in reversed(expected):
+        for group in reversed(expected):
             max_suitable = 0
             for j in ctr:
-                if ctr[j] >= i:
+                if ctr[j] >= group:
                     max_suitable = max(int(j), max_suitable)
             if max_suitable:
-                totals += (max_suitable * i)
+                totals += (max_suitable * group)
                 del ctr[str(max_suitable)]
             else:
                 return 0

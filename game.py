@@ -20,11 +20,39 @@
 from collections import UserString, defaultdict
 from time import time
 from random import shuffle
+from functools import wraps
 
 from const import START, ERROR, STOP, ROLL
 from dice import Dice
 from error import PlayerError
 from scoreboard import Scoreboard
+
+
+def is_usable(func):
+    """Decorator to check command for basic validity"""
+    @wraps(func)
+    def wrapper(self, player, *args, **kwargs):
+        self.chk_command_usable(player)
+        return func(self, player, *args, **kwargs)
+    return wrapper
+
+
+def is_usable_any_turn(func):
+    """Decorator to check command for basic validity"""
+    @wraps(func)
+    def wrapper(self, player, *args, **kwargs):
+        self.chk_command_usable_any_turn(player)
+        return func(self, player, *args, **kwargs)
+    return wrapper
+
+
+def is_reroll_sane(func):
+    """Decorator to check reroll correctness"""
+    @wraps(func)
+    def wrapper(self, player, dice):
+        self.reroll_precheck(player, dice)
+        return func(self, player, dice)
+    return wrapper
 
 
 class Game(object):
@@ -65,6 +93,20 @@ class Game(object):
     def del_player(self, player):
         """Remove a player"""
         if self.started:
+            self.leave_started(player)
+            return
+        if player not in self.players:
+            raise PlayerError(f"{ERROR} You're not in game.")
+        if player == self.owner:
+            self.stop_game(player)
+            raise PlayerError(
+                f"{STOP} Owner has left the game, game is aborted."
+            )
+        self.players.remove(player)
+
+    def leave_started(self, player):
+        """Leave a started game"""
+        if self.started:
             if player.is_active(self):
                 self.scoreboard.zero_scoreboard(player)
                 player.deactivate(self)
@@ -75,17 +117,12 @@ class Game(object):
                     self.rotate_turn()
                 return
             else:
-               raise PlayerError(f"{ERROR} You have already left the game.")
-        if player not in self.players:
-            raise PlayerError(f"{ERROR} You're not in game.")
-        if player == self.owner:
-            self.stop_game(player)
-            raise PlayerError(
-                f"{STOP} Owner has left the game, game is aborted."
-            )
-        self.players.remove(player)
+                raise PlayerError(f"{ERROR} You have already left the game.")
+        else:
+            raise PlayerError(f"{ERROR} Cannot leave: no game in progress.")
 
     def has_active_players(self):
+        """Check if active players remain in the game"""
         for player in self.players:
             if player.is_active(self):
                 return True
@@ -115,8 +152,8 @@ class Game(object):
         if not self.get_current_player().is_active(self):
             self.rotate_turn()
 
-    def chk_command_usable(self, player):
-        """Check if command can be used"""
+    def chk_command_usable_any_turn(self, player):
+        """Check if command can be used on any turn"""
         if not self.started:
             raise PlayerError(
                 f"{ERROR} This game is not started (try {START} /start)."
@@ -126,24 +163,30 @@ class Game(object):
                 f"{ERROR} This game is already finished, create a new game "
                 f"(try {START} /start)."
             )
+        if player not in self.players:
+            raise PlayerError(f"{ERROR} You're not in game.")
+
+    def chk_command_usable(self, player):
+        """Check command can be used on player's turn"""
+        self.chk_command_usable_any_turn(player)
         if not self.is_current_turn(player):
             raise PlayerError(f"{ERROR} It's not your turn.")
 
-    def roll(self, player):
+    @is_usable
+    def roll(self, _):
         """Roll a dice (initial)"""
-        self.chk_command_usable(player)
         if self.hand:
             raise PlayerError(f"{ERROR} You've already rolled a hand.")
         self.hand = sorted(Dice.roll(5 if not self.maxi else 6))
         self.last_op = time()
         return self.hand
 
+    @is_usable
     def get_hand_score_options(self, player):
         """
         Get a list of possible ways to score your hand
         (in descending score order)
         """
-        self.chk_command_usable(player)
         if not self.hand:
             raise PlayerError(
                 f"{ERROR} Cannot get move list - you didn't roll a hand yet "
@@ -151,9 +194,9 @@ class Game(object):
             )
         return self.scoreboard.get_score_options(player, self.hand)
 
+    @is_usable
     def commit_turn(self, player, move):
         """Commit a move and record it in scoreboard"""
-        self.chk_command_usable(player)
         if not self.hand:
             raise PlayerError(
                 f"{ERROR} Cannot move - you didn't roll a hand yet "
@@ -191,18 +234,18 @@ class Game(object):
         """Get player scores"""
         return self.scoreboard.print_player_scores(player)
 
-    def scores_all(self):
-        """Get full scoreboard"""
+    def scores_all(self, _):
+        """Get full scoreboard - unused due to formatting issues"""
         return self.scoreboard.print_scores()
 
-    def scores_final(self):
+    def scores_final(self, _):
         """Get final scores"""
         return self.scoreboard.print_final_scores()
 
-    def reroll_check(self, player, query):
+    @is_usable
+    def reroll_precheck(self, _, query):
         """Reroll pre-checks"""
         dice_count = 5 if not self.maxi else 6
-        self.chk_command_usable(player)
         if not self.hand:
             raise PlayerError(
                 f"{ERROR} Cannot reroll - you didn't roll a hand yet "
@@ -212,17 +255,18 @@ class Game(object):
                 f"{ERROR} You should select from 1 to "
                 f"{dice_count} dice to reroll.")
 
-    def reroll_dice(self, player, dice):
-        """Reroll dice by positions"""
-        self.reroll_check(player, dice)
-        for i in dice:
-            if i not in f'12345{"6" if self.maxi else ""}':
-                dc = 5 if not self.maxi else 6
+    def dice_validate(self, dice):
+        """Check dice for validity"""
+        for die in dice:
+            if die not in f'12345{"6" if self.maxi else ""}':
+                dicecount = 5 if not self.maxi else 6
                 raise PlayerError(
                     f"{ERROR} You should specify numbers in "
-                    f"range 1-{dc} to reroll."
+                    f"range 1-{dicecount} to reroll."
                 )
-        dice = ''.join(list(set(dice)))
+
+    def reroll_increment(self, player):
+        """Increase number of rerolls (and check if we can reroll)"""
         if self.reroll >= 2:
             if self.maxi:
                 if self.saved_rerolls[player]:
@@ -238,8 +282,15 @@ class Game(object):
                 )
         else:
             self.reroll += 1
-        for d in dice:
-            self.hand[int(d) - 1] = Dice.roll_single()
+
+    @is_reroll_sane
+    def reroll_dice(self, player, dice):
+        """Reroll dice by positions"""
+        self.dice_validate(dice)
+        dicemap = map(int, dice)
+        self.reroll_increment(player)
+        for d in dicemap:
+            self.hand[d - 1] = Dice.roll_single()
         self.hand = sorted(self.hand)
         self.last_op = time()
         return self.hand
@@ -250,65 +301,53 @@ class Game(object):
         self.reroll_pool = []
         return self.hand
 
-    def reroll_pool_clear(self, player):
+    @is_usable
+    def reroll_pool_clear(self, _):
         """Clear pooled dice"""
-        self.chk_command_usable(player)
         self.reroll_pool = []
 
-    def reroll_pool_select_all(self, player):
+    @is_usable
+    def reroll_pool_select_all(self, _):
         """Clear pooled dice"""
-        self.chk_command_usable(player)
         self.reroll_pool = ['1', '2', '3', '4', '5']
         if self.maxi:
             self.reroll_pool.append('6')
 
-    def reroll_pool_toggle(self, player, dice):
+    @is_reroll_sane
+    def reroll_pool_toggle(self, _, dice):
         """Toggle dice in reroll pool"""
         if len(dice) != 1:
             raise PlayerError(
                 f"{ERROR} You should specify a single dice to reroll."
             )
-        self.reroll_check(player, dice)
         if dice in self.reroll_pool:
             self.reroll_pool.remove(dice)
         else:
             self.reroll_pool.append(dice)
 
-    def reroll_pool_add(self, player, dice):
+    @is_reroll_sane
+    def reroll_pool_add(self, _, dice):
         """Add dice to reroll pool"""
         if len(dice) != 1:
             raise PlayerError(
                 f"{ERROR} You should specify a single dice to reroll."
             )
-        self.reroll_check(player, dice)
         if dice in self.reroll_pool:
             raise PlayerError(
                 f"{ERROR} This dice is already queued for reroll."
             )
         self.reroll_pool.append(dice)
 
-    def reroll_pool_del(self, player, dice):
+    @is_reroll_sane
+    def reroll_pool_del(self, _, dice):
         """Remove dice from reroll pool"""
         if len(dice) != 1:
             raise PlayerError(
                 f"{ERROR} You should specify a single dice to reroll."
             )
-        self.reroll_check(player, dice)
         if dice not in self.reroll_pool:
             raise PlayerError(f"{ERROR} This dice is not queued for reroll.")
         self.reroll_pool.remove(dice)
-
-    def hand_to_str(self, player):
-        """Hand to string representation"""
-        self.chk_command_usable(player)
-        if not self.hand:
-            return None
-        return ''.join([str(d) for d in self.hand])
-
-    def get_hand(self, player):
-        """Raw hand"""
-        self.chk_command_usable(player)
-        return self.hand
 
     def start_game(self, player):
         """Begin game"""
@@ -328,6 +367,7 @@ class Game(object):
         self.started = True
         self.last_op = time()
 
+    @is_usable_any_turn
     def stop_game(self, player, completed=False):
         """Stop game"""
         if not completed and player != self.owner:

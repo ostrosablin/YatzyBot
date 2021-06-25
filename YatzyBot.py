@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from functools import wraps
 
 from telegram import ParseMode, bot
 from telegram.ext import Updater, CommandHandler, messagequeue
@@ -60,103 +61,128 @@ gamemanager = GameManager()
 
 def dice_to_wildcard(game):
     res = []
-    for i in range(len(game.hand)):
-        if str(i + 1) in game.reroll_pool:
+    for die in range(len(game.hand)):
+        if str(die + 1) in game.reroll_pool:
             res.append(WILDCARD_DICE)
         else:
-            res.append(game.hand[i].to_emoji())
+            res.append(game.hand[die].to_emoji())
     return ' '.join(res)
 
 
-def start(_, update):
+def answer(update, msg, parse_mode=None):
+    kw = {}
+    if parse_mode is not None:
+        kw['parse_mode'] = parse_mode
+    update.message.reply_text(msg, quote=False, isgroup=not is_private(update), **kw)
+
+
+def get_game(update):
+    return gamemanager.game(update.message.chat)
+
+
+def get_player(update):
+    return gamemanager.player(update.message.from_user)
+
+
+def get_current_player(update):
+    return gamemanager.current_turn(update.message.chat)
+
+
+def _game_chooser_msg(update):
     msg = ""
-    logger.info(f"Start attempt - chat_id {update.message.chat.id}")
     if is_private(update):
         msg = (
             f"{INFO} NOTE: Solo mode, if you want to play a multiplayer "
             f"game with friends, add me to some group and use "
             f"{START} /start command there.\n\n"
         )
-    if not gamemanager.is_game_created(
-            update.message.chat) or gamemanager.game(
-            update.message.chat).finished:
-        update.message.reply_text(
-            f"Hello! {HELLO} I'm Yatzy/Yahtzee bot. To see the help, use "
-            f"{HELP} /help command.\n\nLet's get started, eh?\n\n{msg}"
-            f"Please, choose a game you want to play:\n\n"
-            f"{START} /startyatzy - Start Yatzy game.\n\n"
-            f"{START} /startyahtzee - Start Yahtzee game.\n\n"
-            f"{START} /startforcedyatzy - Start Forced Yatzy game.\n\n"
-            f"{START} /startmaxiyatzy - Start Maxi Yatzy game.\n\n"
-            f"{START} /startforcedmaxiyatzy - Start Forced Maxi Yatzy game.",
-            quote=False, isgroup=not is_private(update)
-        )
+    reply = (
+        f"Hello! {HELLO} I'm Yatzy/Yahtzee bot. To see the help, use "
+        f"{HELP} /help command.\n\nLet's get started, eh?\n\n{msg}"
+        f"Please, choose a game you want to play:\n\n"
+        f"{START} /startyatzy - Start Yatzy game.\n\n"
+        f"{START} /startyahtzee - Start Yahtzee game.\n\n"
+        f"{START} /startforcedyatzy - Start Forced Yatzy game.\n\n"
+        f"{START} /startmaxiyatzy - Start Maxi Yatzy game.\n\n"
+        f"{START} /startforcedmaxiyatzy - Start Forced Maxi Yatzy game."
+    )
+    answer(update, reply)
+
+
+def _game_start_msg(update):
+    msg = (
+        f"{START} Game begins! Roll dice with {ROLL} /roll command."
+        f"\n\nTo stop the game, use {STOP} /stop command.\n\n"
+        f"Current turn: "
+        f"{gamemanager.current_turn(update.message.chat)}"
+    )
+    answer(update, msg)
+
+
+def start(_, update):
+    logger.info(f"Start attempt - chat_id {update.message.chat.id}")
+    game = get_game(update)
+    if not gamemanager.is_game_created(update.message.chat) or game.finished:
+        _game_chooser_msg(update)
     elif not gamemanager.is_game_running(update.message.chat):
         try:
             logger.info(f"Game started - chat_id {update.message.chat.id}")
-            gamemanager.game(
-                update.message.chat).start_game(
-                gamemanager.player(
-                    update.message.from_user))
-            update.message.reply_text(
-                f"{START} Game begins! Roll dice with {ROLL} /roll command."
-                f"\n\nTo stop the game, use {STOP} /stop command.\n\n"
-                f"Current turn: "
-                f"{gamemanager.current_turn(update.message.chat)}",
-                quote=False, isgroup=not is_private(update)
-            )
+            game.start_game(get_player(update))
+            _game_start_msg(update)
         except PlayerError as e:
-            update.message.reply_text(
-                str(e), quote=False, isgroup=not is_private(update))
+            answer(update, str(e))
+    else:
+        answer(update, f"{ERROR} Game is already started.")
+
+
+def _game_created_msg(update, player, gamename):
+    if is_private(update):
+        msg = (
+            f"{CONGRATS} Success! You've created and joined a new solo "
+            f"{gamename} game!\n\nRoll dice with {ROLL} /roll command.\n\n"
+            f"To stop the game, use {STOP} /stop command."
+        )
+    else:
+        msg = (
+            f"{CONGRATS} Success! You've created and joined a new {gamename} game!"
+            f"\n\nOthers can join using {JOIN} /join command.\n\n"
+            f"When all set - use {START} /start to begin.\n\n"
+            f"{OWNER} Game owner: {player}"
+        )
+    answer(update, msg)
 
 
 def startgame(_, update, yahtzee, forced=False, maxi=False):
+    player = get_player(update)
     if yahtzee:
-        game = "Yahtzee"
+        gamename = "Yahtzee"
     else:
-        gname = []
+        gamename = []
         if forced:
-            gname.append("Forced")
+            gamename.append("Forced")
         if maxi:
-            gname.append("Maxi")
-        gname.append("Yatzy")
-        game = ' '.join(gname)
+            gamename.append("Maxi")
+        gamename.append("Yatzy")
+        gamename = ' '.join(gamename)
     try:
         gamemanager.new_game(
             update.message.chat,
             update.message.from_user,
             yahtzee,
             forced,
-            maxi)
-        if update.message.chat.type == 'private':
-            gamemanager.game(
-                update.message.chat).start_game(
-                gamemanager.player(
-                    update.message.from_user))
+            maxi
+        )
+        game = get_game(update)
+        if is_private(update):
+            game.start_game(player)
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
-    player = gamemanager.player(update.message.from_user)
     logger.info(
-        f"{player} has created a new {game} game"
+        f"{player} has created a new {gamename} game"
         f" - chat_id {update.message.chat.id}"
     )
-    if update.message.chat.type == 'private':
-        update.message.reply_text(
-            f"{CONGRATS} Success! You've created and joined a new solo "
-            f"{game} game!\n\nRoll dice with {ROLL} /roll command.\n\n"
-            f"To stop the game, use {STOP} /stop command.",
-            quote=False, isgroup=not is_private(update)
-        )
-    else:
-        update.message.reply_text(
-            f"{CONGRATS} Success! You've created and joined a new {game} game!"
-            f"\n\nOthers can join using {JOIN} /join command.\n\n"
-            f"When all set - use {START} /start to begin.\n\n"
-            f"{OWNER} Game owner: {player}", quote=False,
-            isgroup=not is_private(update)
-        )
+    _game_created_msg(update, player, gamename)
 
 
 def startyahtzee(bot_instance, update):
@@ -179,20 +205,20 @@ def startforcedmaxiyatzy(bot_instance, update):
     startgame(bot_instance, update, False, True, True)
 
 
-def chk_game_runs(update):
-    if not gamemanager.is_game_created(update.message.chat):
-        update.message.reply_text(
-            f"{ERROR} Game doesn't exist (try {START} /start).",
-            quote=False, isgroup=not is_private(update)
-        )
-        return False
-    if not gamemanager.is_game_running(update.message.chat):
-        update.message.reply_text(
-            f"{ERROR} Game is not running (try {START} /start).",
-            quote=False, isgroup=not is_private(update)
-        )
-        return False
-    return True
+def chk_game_runs(func):
+    @wraps(func)
+    def wrapper(_, update):
+        if not gamemanager.is_game_created(update.message.chat):
+            answer(update, f"{ERROR} Game doesn't exist (try {START} /start).")
+            return
+        if not gamemanager.is_game_running(update.message.chat):
+            answer(
+                update,
+                f"{ERROR} Game is not running (try {START} /start)."
+            )
+            return
+        func(_, update)
+    return wrapper
 
 
 def is_private(update):
@@ -201,436 +227,381 @@ def is_private(update):
     return False
 
 
+@chk_game_runs
 def stop(_, update):
-    if not chk_game_runs(update):
-        return
     try:
-        gamemanager.game(
-            update.message.chat).stop_game(
-            gamemanager.player(
-                update.message.from_user))
+        get_game(update).stop_game(get_player(update))
         logger.info(f"Stopped game - chat_id {update.message.chat.id}")
-        update.message.reply_text(
-            f"{STOP} Current game has been stopped.\n\n", quote=False,
-            isgroup=not is_private(update)
-        )
+        answer(update, f"{STOP} Current game has been stopped.\n\n")
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
 
 
-def roster_check(update):
-    if not gamemanager.is_game_created(update.message.chat):
-        update.message.reply_text(
-            f"{ERROR} Game doesn't exist (try {START} /start).", quote=False,
-            isgroup=not is_private(update)
-        )
-        return False
-    if gamemanager.game(update.message.chat).finished:
-        update.message.reply_text(
-            f"{ERROR} This game is already finished, create a new game "
-            f"(try {START} /start).", quote=False,
-            isgroup=not is_private(update)
-        )
-        return False
-    return True
+def roster_check(func):
+    @wraps(func)
+    def wrapper(_, update):
+        if not gamemanager.is_game_created(update.message.chat):
+            answer(update, f"{ERROR} Game doesn't exist (try {START} /start).")
+            return
+        if get_game(update).finished:
+            answer(
+                update,
+                f"{ERROR} This game is already finished, create a new game "
+                f"(try {START} /start)."
+            )
+            return
+        func(_, update)
+    return wrapper
 
 
+@roster_check
 def join(_, update):
-    if not roster_check(update):
-        return
-    player = gamemanager.player(update.message.from_user)
+    player = get_player(update)
     try:
-        gamemanager.game(update.message.chat).add_player(player)
+        get_game(update).add_player(player)
         logger.info(
             f"{player} has joined a game - chat_id {update.message.chat.id}"
         )
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
-    update.message.reply_text(
+    answer(
+        update,
         f"{JOIN} {player} has joined the game!\n\n"
-        f"{LEAVE} /leave - Leave the game lobby.", quote=False,
-        isgroup=not is_private(update)
+        f"{LEAVE} /leave - Leave the game lobby."
     )
 
 
+@roster_check
 def leave(_, update):
-    if not roster_check(update):
-        return
-    player = gamemanager.player(update.message.from_user)
+    player = get_player(update)
+    game = get_game(update)
     try:
-        is_lobby = not gamemanager.game(update.message.chat).started
+        is_lobby = not game.started
         turn = None
         if not is_lobby:
-            turn = gamemanager.game(update.message.chat).get_current_player()
-        gamemanager.game(update.message.chat).del_player(player)
-        is_finished = gamemanager.game(update.message.chat).finished
-        switch_turn = not is_finished and turn == player
+            turn = game.get_current_player()
+        lobby = " lobby" if is_lobby else ""
+        logger.info(
+            f"{player} has left a game{lobby}"
+            f" - chat_id {update.message.chat.id}"
+        )
+        game.del_player(player)
+        switch_turn = not game.finished and turn == player
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
-    lobby = " lobby" if is_lobby else ""
-    logger.info(
-        f"{player} has left a game{lobby} - chat_id {update.message.chat.id}"
-    )
-    update.message.reply_text(
-        f"{LEAVE} {player} has left the game{lobby}!", quote=False,
-        isgroup=not is_private(update)
-    )
-    if is_finished:
-        update.message.reply_text(
-            f"{STOP} Last player has left the game. Game is over.",
-            quote=False, isgroup=not is_private(update)
+    answer(update, f"{LEAVE} {player} has left the game{lobby}!")
+    if game.finished and not game.has_active_players():
+        logger.info(
+            f"Game stopped (abandoned) - chat_id {update.message.chat.id}"
         )
+        answer(update, f"{STOP} Last player has left the game. Game is over.")
     if not is_lobby:
-        scoreall_msg = f"{SCORE_ALL} Current total scores:\n\n"
-        if is_finished:
-            scoreall_msg = f"{CONGRATS} The game has ended! Final scores:\n\n"
-        scores = gamemanager.game(update.message.chat).scores_player(player)
-        update.message.reply_text(
-            f"{SCORE} Scoreboard for {player}:\n\n`{scores}`", quote=False,
-            parse_mode=ParseMode.MARKDOWN, isgroup=not is_private(update)
-        )
-        update.message.reply_text(
-            f'{scoreall_msg}'
-            f'{gamemanager.game(update.message.chat).scores_final()}',
-            quote=False, isgroup=not is_private(update)
-        )
+        score_messages(update, player, game.finished)
         if not switch_turn:
             return
-        player = turn
-        saved = ""
-        if gamemanager.game(update.message.chat).maxi:
-            extra = gamemanager.game(update.message.chat).saved_rerolls[player]
-            if extra:
-                saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
-        update.message.reply_text(
-            f"{INFO} Current turn: "
-            f"{gamemanager.current_turn(update.message.chat)}\n\n"
-            f"Use {ROLL} /roll to roll dice.\n\n"
-            f"Use {SCORE} /score to view your scoreboard.\n\n"
-            f"Use {SCORE_ALL} /score_all to view everyone's total score.\n\n"
-            f"{saved}",
-            quote=False, isgroup=not is_private(update)
-        )
+        current_turn_msg(update)
 
 
-def roll(_, update):
-    if not chk_game_runs(update):
-        return
-    player = gamemanager.player(update.message.from_user)
-    try:
-        dice = gamemanager.game(update.message.chat).roll(player)
-    except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
-        return
-    saved = ""
-    if gamemanager.game(update.message.chat).maxi:
-        extra = gamemanager.game(update.message.chat).saved_rerolls[player]
-        if extra:
-            saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
-    update.message.reply_text(
-        f"{ROLL} {player} has rolled (Reroll 0/2):\n\n"
+def roll_msg(update, game, player, dice):
+    rerolllink = f"{ROLL} /reroll to choose dice for reroll.\n\n" \
+                 f"{ROLL} /qr <positions> to do a quick reroll.\n\n"
+    if game.reroll > 1:
+        if game.maxi:
+            if not game.saved_rerolls[player]:
+                rerolllink = ""
+        else:
+            rerolllink = ""
+    saved = get_extra_rerolls(game, player)
+    rollnumber = game.reroll
+    answer(
+        update,
+        f"{ROLL} {player} has rolled (Reroll {rollnumber}/2):\n\n"
         f"{' '.join([d.to_emoji() for d in dice])}\n\n"
-        f"Use {ROLL} /reroll to choose dice for reroll.\n\n"
-        f"Use {ROLL} /qr <positions> to do a quick reroll.\n\n"
-        f"Use {MOVE} /move to choose a move.\n\n{saved}",
-        quote=False, isgroup=not is_private(update))
+        f"{rerolllink}{MOVE} /move to choose a move.\n\n{saved}"
+    )
 
 
-def reroll(_, update):
-    if not chk_game_runs(update):
-        return
-    player = gamemanager.player(update.message.from_user)
+@chk_game_runs
+def roll(_, update):
+    game = get_game(update)
+    player = get_player(update)
     try:
-        gamemanager.game(update.message.chat).chk_command_usable(player)
-        if not gamemanager.game(update.message.chat).hand:
+        dice = game.roll(player)
+    except PlayerError as e:
+        answer(update, str(e))
+        return
+    roll_msg(update, game, player, dice)
+
+
+def reroll_msg(update, game, player, dice):
+    saved = get_extra_rerolls(game, player)
+    sixth = ""
+    if saved:
+        sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
+    rollnumber = game.reroll
+    msg = (
+        f"{ROLL} Reroll menu (Reroll {rollnumber}/2):\n\n"
+        f"{dice_to_wildcard(game)}\n\n"
+        f"{RESET_REROLL} /rr - Reset reroll (deselect all).\n\n"
+        f"{dice[0].to_emoji()} /1 - Toggle reroll first dice.\n\n"
+        f"{dice[1].to_emoji()} /2 - Toggle reroll second dice.\n\n"
+        f"{dice[2].to_emoji()} /3 - Toggle reroll third dice.\n\n"
+        f"{dice[3].to_emoji()} /4 - Toggle reroll fourth dice.\n\n"
+        f"{dice[4].to_emoji()} /5 - Toggle reroll fifth dice.\n\n"
+        f"{sixth}{SELECT_ALL} /sa - Select all.\n\n"
+        f"{DO_REROLL} /dr - Do reroll.\n\n"
+        f"{MOVE} /move - to choose a move.\n\n{saved}"
+    )
+    if game.reroll > 1:
+        if not saved:  # We don't have saved Maxi Yatzy turns
+            msg = (
+                f"{ERROR} You have already rerolled twice.\n\n"
+                f"Use {MOVE} /move command to finish your move."
+            )
+    answer(update, msg)
+
+
+@chk_game_runs
+def reroll(_, update):
+    game = get_game(update)
+    player = get_player(update)
+    try:
+        game.chk_command_usable(player)
+        if not game.hand:
             raise PlayerError(
                 f"{ERROR} Cannot reroll - you didn't roll a hand yet "
                 f"(try {ROLL} /roll)."
             )
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
-    dice = gamemanager.game(update.message.chat).hand
-    sixth = ""
-    saved = ""
-    if gamemanager.game(update.message.chat).maxi:
-        sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
-        extra = gamemanager.game(update.message.chat).saved_rerolls[player]
-        if extra:
-            saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
-    rollnumber = gamemanager.game(update.message.chat).reroll
-    msg = (f"{ROLL} Reroll menu (Reroll {rollnumber}/2):\n\n"
-           f"{dice_to_wildcard(gamemanager.game(update.message.chat))}\n\n"
-           f"{RESET_REROLL} /rr - Reset reroll (deselect all).\n\n"
-           f"{dice[0].to_emoji()} /1 - Toggle reroll first dice.\n\n"
-           f"{dice[1].to_emoji()} /2 - Toggle reroll second dice.\n\n"
-           f"{dice[2].to_emoji()} /3 - Toggle reroll third dice.\n\n"
-           f"{dice[3].to_emoji()} /4 - Toggle reroll fourth dice.\n\n"
-           f"{dice[4].to_emoji()} /5 - Toggle reroll fifth dice.\n\n"
-           f"{sixth}{SELECT_ALL} /sa - Select all.\n\n"
-           f"{DO_REROLL} /dr - Do reroll.\n\n"
-           f"{MOVE} /move - Choose a move.\n\n{saved}"
-           )
-    if gamemanager.game(update.message.chat).reroll > 1:
-        if not saved:  # We don't have saved Maxi Yatzy turns
-            msg = (
-                f"{ERROR} You have already rerolled twice.\n"
-                f"Use {MOVE} /move command to finish your move."
-            )
-    update.message.reply_text(msg, quote=False, isgroup=not is_private(update))
+    dice = game.hand
+    reroll_msg(update, game, player, dice)
 
 
+def send_dice(update, game):
+    answer(update, dice_to_wildcard(game))
+
+
+def explain_quick_reroll():
+    raise PlayerError(
+        f"{ERROR} This is a quick reroll command: it requires "
+        f"arguments and cannot be used without any like that. "
+        f"You should pass positions of dice to reroll.\n\n"
+        f"To reroll specific dice (e.g. first three), just "
+        f"type their positions, like that:\n\n"
+        f"/qr 123\n\n"
+        f"To reroll all dice, any of these commands will work:"
+        f"\n\n/qr a\n/qr all\n/qr -\n\n"
+        f"If you wish to hold particular dice (e.g. keep last "
+        f"two), and reroll others, any of these will work:"
+        f"\n\n/qr h45\n/qr !45"
+    )
+
+
+def quick_reroll_set(game, command):
+    if not command:
+        explain_quick_reroll()
+    if "a" in command or "-" in command:
+        command = f"12345{'6' if game.maxi else ''}"
+    if "h" in command or "!" in command:
+        allowed = f"12345{'6' if game.maxi else ''}"
+        inverse = list(allowed)
+        for char in command:
+            if char in allowed:
+                if char in inverse:
+                    inverse.remove(char)
+            elif char in "h!":
+                pass
+            else:
+                inverse.append(char)
+                break
+        command = "".join(inverse)
+    return command
+
+
+@chk_game_runs
 def reroll_process(_, update):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
     args = update.message.text.strip().split(None)[1:]
-    if not chk_game_runs(update):
-        return
-    player = gamemanager.player(update.message.from_user)
+    game = get_game(update)
+    player = get_player(update)
     try:
-        gamemanager.game(update.message.chat).chk_command_usable(player)
-        if not gamemanager.game(update.message.chat).hand:
+        game.chk_command_usable(player)
+        if not game.hand:
             raise PlayerError(
                 f"{ERROR} Cannot reroll - you didn't roll a hand yet "
                 f"(try {ROLL} /roll)."
             )
         if arg in ['1', '2', '3', '4', '5', '6']:
             # 6 only for Maxi games
-            if arg == '6' and not gamemanager.game(update.message.chat).maxi:
+            if arg == '6' and not game.maxi:
                 return
-            gamemanager.game(
-                update.message.chat).reroll_pool_toggle(
-                player, arg)
-            update.message.reply_text(
-                f"{dice_to_wildcard(gamemanager.game(update.message.chat))}",
-                quote=False, isgroup=not is_private(update)
-            )
+            game.reroll_pool_toggle(player, arg)
+            send_dice(update, game)
         elif arg == 'rr':
-            gamemanager.game(update.message.chat).reroll_pool_clear(player)
-            update.message.reply_text(
-                f"{dice_to_wildcard(gamemanager.game(update.message.chat))}",
-                quote=False, isgroup=not is_private(update)
-            )
+            game.reroll_pool_clear(player)
+            send_dice(update, game)
         elif arg == 'sa':
-            gamemanager.game(
-                update.message.chat).reroll_pool_select_all(player)
-            update.message.reply_text(
-                f"{dice_to_wildcard(gamemanager.game(update.message.chat))}",
-                quote=False, isgroup=not is_private(update)
-            )
+            game.reroll_pool_select_all(player)
+            send_dice(update, game)
         elif arg == 'dr' or arg == 'qr':
             if arg == 'qr':
-                to_reroll = "".join(args).lower()
-                if not to_reroll:
-                    raise PlayerError(
-                        f"{ERROR} This is a quick reroll command: it requires "
-                        f"arguments and cannot be used without any like that. "
-                        f"You should pass positions of dice to reroll.\n\n"
-                        f"To reroll specific dice (e.g. first three), just "
-                        f"type their positions, like that:\n\n"
-                        f"/qr 123\n\n"
-                        f"To reroll all dice, any of these commands will work:"
-                        f"\n\n/qr a\n/qr all\n/qr -\n\n"
-                        f"If you wish to hold particular dice (e.g. keep last "
-                        f"two), and reroll others, any of these will work:"
-                        f"\n\n/qr h45\n/qr !45"
-                    )
-                maxi = gamemanager.game(update.message.chat).maxi
-                if "a" in to_reroll or "-" in to_reroll:
-                    to_reroll = f"12345{'6' if maxi else ''}"
-                if "h" in to_reroll or "!" in to_reroll:
-                    allowed = f"12345{'6' if maxi else ''}"
-                    inverse = list(allowed)
-                    for char in to_reroll:
-                        if char in allowed:
-                            if char in inverse:
-                                inverse.remove(char)
-                        elif char in "h!":
-                            pass
-                        else:
-                            inverse.append(char)
-                            break
-                    to_reroll = "".join(inverse)
-                dice = gamemanager.game(
-                    update.message.chat).reroll_dice(player, to_reroll)
-                gamemanager.game(update.message.chat).reroll_pool_clear(player)
+                to_reroll = quick_reroll_set(game, "".join(args).lower())
+                dice = game.reroll_dice(player, to_reroll)
+                game.reroll_pool_clear(player)
             else:
-                dice = gamemanager.game(
-                    update.message.chat).reroll_pooled(player)
-            rerolllink = f"{ROLL} /reroll - Do reroll.\n\n" \
-                         f"{ROLL} /qr - Do a quick reroll.\n\n"
-            if gamemanager.game(update.message.chat).reroll > 1:
-                if gamemanager.game(update.message.chat).maxi:
-                    if not gamemanager.game(
-                            update.message.chat).saved_rerolls[player]:
-                        rerolllink = ""
-                else:
-                    rerolllink = ""
-            saved = ""
-            if gamemanager.game(update.message.chat).maxi:
-                extra = gamemanager.game(
-                    update.message.chat).saved_rerolls[player]
-                if extra:
-                    saved = (
-                        f"{INFO} You have {extra} "
-                        f"extra saved reroll(s).\n\n"
-                    )
-            rollnumber = gamemanager.game(update.message.chat).reroll
-            update.message.reply_text(
-                f"{ROLL} {player} has rolled (Reroll {rollnumber}/2):\n\n"
-                f"{' '.join([d.to_emoji() for d in dice])}\n\n"
-                f"{rerolllink}{MOVE} /move - Do a move.\n\n{saved}",
-                quote=False, isgroup=not is_private(update)
-            )
+                dice = game.reroll_pooled(player)
+            roll_msg(update, game, player, dice)
         else:
-            update.message.reply_text(
-                f"{ERROR} Invalid reroll action.", quote=False,
-                isgroup=not is_private(update)
-            )
+            answer(update, f"{ERROR} Invalid reroll action.")
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
 
 
+@chk_game_runs
 def commit(_, update):
-    if not chk_game_runs(update):
-        return
-    player = gamemanager.player(update.message.from_user)
+    game = get_game(update)
+    player = get_player(update)
     try:
-        options = gamemanager.game(
-            update.message.chat).get_hand_score_options(player)
+        options = game.get_hand_score_options(player)
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
     output = []
-    for i in options:
+    for option in options:
         output.append(
-            f"{MOVE_BOX_ICONS[i]} /{MAP_COMMANDS[i]} "
-            f"{i} - {options[i]} points."
+            f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
+            f"{option} - {options[option]} points."
         )
-    if gamemanager.game(update.message.chat).reroll < 2:
-        output.append(f"{ROLL} /reroll - Do reroll.")
-        output.append(f"{ROLL} /qr - Do a quick reroll.\n\n")
-    else:
-        if gamemanager.game(update.message.chat).maxi:
-            if gamemanager.game(update.message.chat).saved_rerolls[player]:
-                output.append(f"{ROLL} /reroll - Do reroll.")
-                output.append(f"{ROLL} /qr - Do a quick reroll.\n\n")
+    if game.reroll < 2 or (game.maxi and game.saved_rerolls[player]):
+        output.append(f"{ROLL} /reroll - to choose dice for reroll.")
+        output.append(f"{ROLL} /qr <positions> - to do a quick reroll.\n\n")
     table = '\n\n'.join(output)
-    update.message.reply_text(
-        f"{MOVE} Your scoring options:\n\n{table}", quote=False,
-        isgroup=not is_private(update)
+    answer(update, f"{MOVE} Your scoring options:\n\n{table}")
+
+
+def get_extra_rerolls(game, player):
+    saved = ""
+    if game.maxi:
+        extra = game.saved_rerolls[player]
+        if extra:
+            saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
+    return saved
+
+
+def current_turn_msg(update):
+    game = get_game(update)
+    player = get_current_player(update)
+    saved = get_extra_rerolls(game, player)
+    answer(
+        update,
+        f"{INFO} Current turn: "
+        f"{player}\n\n"
+        f"Use {ROLL} /roll to roll dice.\n\n"
+        f"Use {SCORE} /score to view your scoreboard.\n\n"
+        f"Use {SCORE_ALL} /score_all to view everyone's total score.\n\n"
+        f"{saved}"
     )
 
 
+def move_msg(update, saved_rerolls, player, move, points):
+    acquired_extra = ""
+    if saved_rerolls:
+        acquired_extra = f"{INFO} Saved +{saved_rerolls} extra reroll(s)"
+    answer(
+        update,
+        f"{MOVE} {player} scores {MOVE_ICONS[move]} {MAP_TURNS[move]}"
+        f" for {points} points.\n\n"
+        f"{acquired_extra}"
+    )
+
+
+@chk_game_runs
 def commit_move(_, update):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
-    if not chk_game_runs(update):
-        return
-    player = gamemanager.player(update.message.from_user)
-    acquired_extra = ""
-    if gamemanager.game(update.message.chat).maxi:
-        saved_rerolls = (2 - gamemanager.game(update.message.chat).reroll)
-        if saved_rerolls:
-            acquired_extra = f"{INFO} Saved +{saved_rerolls} extra reroll(s)"
+    game = get_game(update)
+    player = get_player(update)
+    saved_rerolls = 0
+    if game.maxi:
+        saved_rerolls = (2 - game.reroll)
     try:
-        score_pos = gamemanager.game(
-            update.message.chat).commit_turn(
-            player, MAP_TURNS[arg])
-        scores = gamemanager.game(update.message.chat).scores_player(player)
+        score_pos = game.commit_turn(player, MAP_TURNS[arg])
     except (PlayerError, IllegalMoveError) as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
-    update.message.reply_text(
-        f"{MOVE} {player} scores {MOVE_ICONS[arg]} {MAP_TURNS[arg]}"
-        f" for {score_pos} points.\n\n"
-        f"{acquired_extra}",
-        quote=False, isgroup=not is_private(update)
-    )
-    update.message.reply_text(
-        f"{SCORE} Scoreboard for {player}:\n\n`{scores}`", quote=False,
-        parse_mode=ParseMode.MARKDOWN, isgroup=not is_private(update)
-    )
+    move_msg(update, saved_rerolls, player, arg, score_pos)
+    scoreboard_msg(update, player)
     if gamemanager.game(update.message.chat).is_completed():
+        totalscore_msg(update, finished=True)
+    else:
+        current_turn_msg(update)
+
+
+def scoreboard_msg(update, player):
+    try:
+        scores = get_game(update).scores_player(player)
+    except PlayerError as e:
+        answer(update, str(e))
+        return
+    answer(
+        update,
+        f"{SCORE} Scoreboard for {player}:\n\n`{scores}`",
+        parse_mode=ParseMode.MARKDOWN
+    )
+
+
+@chk_game_runs
+def score(_, update):
+    player = get_player(update)
+    scoreboard_msg(update, player)
+
+
+def totalscore_msg(update, finished=False):
+    player = get_player(update)
+    emoji = SCORE_ALL
+    msg = "Current total scores"
+    if finished:
+        emoji = CONGRATS
+        msg = "The game has ended! Final scores"
         logger.info(
             f"The game is completed - chat_id {update.message.chat.id}"
         )
-        update.message.reply_text(
-            f'{CONGRATS} The game has ended! Final scores:\n\n'
-            f'{gamemanager.game(update.message.chat).scores_final()}',
-            quote=False, isgroup=not is_private(update))
-    else:
-        saved = ""
-        if gamemanager.game(update.message.chat).maxi:
-            player = gamemanager.game(update.message.chat).get_current_player()
-            extra = gamemanager.game(update.message.chat).saved_rerolls[player]
-            if extra:
-                saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
-        update.message.reply_text(
-            f"{INFO} Current turn: "
-            f"{gamemanager.current_turn(update.message.chat)}\n\n"
-            f"Use {ROLL} /roll to roll dice.\n\n"
-            f"Use {SCORE} /score to view your scoreboard.\n\n"
-            f"Use {SCORE_ALL} /score_all to view everyone's total score.\n\n"
-            f"{saved}",
-            quote=False, isgroup=not is_private(update)
-        )
-
-
-def score(_, update):
-    if not chk_game_runs(update):
-        return
-    player = gamemanager.player(update.message.from_user)
     try:
-        scores = gamemanager.game(update.message.chat).scores_player(player)
+        scores = get_game(update).scores_final(player)
     except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
+        answer(update, str(e))
         return
-    update.message.reply_text(
-        f"{SCORE} Scoreboard for {player}:\n\n`{scores}`", quote=False,
-        parse_mode=ParseMode.MARKDOWN, isgroup=not is_private(update)
-    )
+    answer(update, f"{emoji} {msg}:\n\n{scores}")
 
 
+def score_messages(update, player, finished):
+    scoreboard_msg(update, player)
+    totalscore_msg(update, finished)
+
+
+@chk_game_runs
 def score_all(_, update):
-    if not chk_game_runs(update):
-        return
-    try:
-        scores = gamemanager.game(update.message.chat).scores_final()
-    except PlayerError as e:
-        update.message.reply_text(
-            str(e), quote=False, isgroup=not is_private(update))
-        return
-    update.message.reply_text(
-        f"{SCORE_ALL} Current total scores:\n\n{scores}", quote=False,
-        parse_mode=ParseMode.MARKDOWN, isgroup=not is_private(update)
-    )
+    totalscore_msg(update)
 
 
 def bot_help(_, update):
     logger.info("Help invoked")
-    update.message.reply_text(
+    answer(
+        update,
         f"{HELP} Use {START} /start command to begin and follow the"
         f" instructions.\n\nYou can read on Yatzy and Yahtzee rules here:\n"
         f"https://en.wikipedia.org/wiki/Yatzy\n"
-        f"https://en.wikipedia.org/wiki/Yahtzee",
-        quote=False, isgroup=not is_private(update)
+        f"https://en.wikipedia.org/wiki/Yahtzee"
     )
 
 
 def error(_, update, err):
     """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, err)
+    logger.error('Update "%s" caused error "%s"', update, err)
 
 
 class MQBot(bot.Bot):
