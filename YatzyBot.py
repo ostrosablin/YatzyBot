@@ -73,7 +73,9 @@ def answer(update, msg, parse_mode=None):
     kw = {}
     if parse_mode is not None:
         kw['parse_mode'] = parse_mode
-    update.message.reply_text(msg, quote=False, isgroup=not is_private(update), **kw)
+    update.message.reply_text(
+        msg, quote=False, isgroup=not is_private(update), **kw
+    )
 
 
 def get_game(update):
@@ -144,8 +146,8 @@ def _game_created_msg(update, player, gamename):
         )
     else:
         msg = (
-            f"{CONGRATS} Success! You've created and joined a new {gamename} game!"
-            f"\n\nOthers can join using {JOIN} /join command.\n\n"
+            f"{CONGRATS} Success! You've created and joined a new {gamename}"
+            f" game!\n\nOthers can join using {JOIN} /join command.\n\n"
             f"When all set - use {START} /start to begin.\n\n"
             f"{OWNER} Game owner: {player}"
         )
@@ -268,7 +270,11 @@ def join(_, update):
     answer(
         update,
         f"{JOIN} {player} has joined the game!\n\n"
-        f"{LEAVE} /leave - Leave the game lobby."
+        f"{LEAVE} /leave - Leave the game lobby.\n\n"
+        f"NOTE: Уou can also use /leave later to leave a game in progress. "
+        f"This will forfeit your remaining turns and any remaining unfilled "
+        f"scoreboard boxes will be filled with zeros. However, you will still "
+        f"be listed in game totals with your last score."
     )
 
 
