@@ -344,7 +344,7 @@ def roll(_, update):
 def reroll_msg(update, game, player, dice):
     saved = get_extra_rerolls(game, player)
     sixth = ""
-    if saved:
+    if game.maxi:
         sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
     rollnumber = game.reroll
     msg = (
