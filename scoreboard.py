@@ -178,14 +178,19 @@ class Scoreboard(object):
                     return 100
         return 0
 
-    def award_upper_section_bonus(self, player):
-        """Check if Upper Section Bonus is to be awarded and give it"""
+    def get_upper_section_bonus_score(self):
+        """Calculate the score needed to get upper section bonus"""
         # Upper Section Bonus - if we score 63 or more in upper section
         # 84 or more for Maxi Yatzy
         upper_section_bonus = 63 if not self.maxi else 84
         if self.forced:
             # 42 for Forced Yatzy (63 for Forced Maxi Yatzy)
             upper_section_bonus -= 21
+        return upper_section_bonus
+
+    def award_upper_section_bonus(self, player):
+        """Check if Upper Section Bonus is to be awarded and give it"""
+        upper_section_bonus = self.get_upper_section_bonus_score()
         if self.scores[player].get(
                 "Up. Sect. Total").score >= upper_section_bonus:
             # And if we didn't score the bonus yet
@@ -315,6 +320,13 @@ class Scoreboard(object):
             output.append(
                 [box.name, "" if box.score is None else str(box.score)])
             if box.name == "Up. Sect. Bonus":
+                up_sec_bonus = self.get_upper_section_bonus_score()
+                up_sec_total = self.scores[player].get("Up. Sect. Total").score
+                remaining = max(up_sec_bonus - up_sec_total, 0)
+                bonus = "Awarded"
+                if remaining:
+                    bonus = f"{remaining} more"
+                output.append([f"Bonus if ≥ {up_sec_bonus}", bonus])
                 output.append(["", ""])
         return tabulate(output, tablefmt="simple")
 
