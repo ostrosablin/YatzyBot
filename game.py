@@ -381,6 +381,18 @@ class Game(object):
         self.last_op = 0
         self.players = []
 
+    @is_usable_any_turn
+    def kick_player(self, player):
+        """Kick current player"""
+        kicked_player = self.get_current_player()
+        selfkick = player == kicked_player
+        if (time() - self.last_op) < INACTIVITY_TIMEOUT:
+            if not selfkick and player != self.owner:
+                raise PlayerError(f"{ERROR} Only owner can do this!")
+        self.leave_started(kicked_player)
+        self.last_op = time()
+        return kicked_player
+
 
 class Player(UserString):
     """Class for representing a player"""

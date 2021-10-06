@@ -39,6 +39,7 @@ INFO = "💡"
 HELLO = "✋"
 CONGRATS = "🎉"
 OWNER = "👮‍♂️"
+KICK = "🥾"
 
 # Move icons
 MOVE_ICONS = {

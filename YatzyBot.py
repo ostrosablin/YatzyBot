@@ -43,6 +43,7 @@ from const import (
     HELLO,
     CONGRATS,
     OWNER,
+    KICK,
     MOVE_BOX_ICONS,
     MOVE_ICONS,
     MAP_TURNS,
@@ -239,6 +240,44 @@ def stop(_, update):
         answer(update, str(e))
 
 
+def owner_transfer_msg(update, oldowner, newowner):
+    if oldowner != newowner:
+        logger.info(
+            f"Owner {oldowner} left the game, new owner is"
+            f" {newowner} - chat_id {update.message.chat.id}"
+        )
+        answer(
+            update, f"{OWNER} Owner {oldowner} has left the game. "
+                    f"Ownership is transferred to player {newowner}."
+        )
+
+
+@chk_game_runs
+def kick(_, update):
+    try:
+        game = get_game(update)
+        kicker = get_player(update)
+        oldowner = game.owner
+        kicked = game.kick_player(kicker)
+        kicked_msg = f"{kicker} has kicked {kicked} from the game"
+        if kicker == kicked:
+            kicked_msg = f"{kicker} kicks self from the game"
+        logger.info(f"{kicked_msg} - chat_id {update.message.chat.id}")
+        answer(update, f"{KICK} {kicked_msg}.\n\n")
+        owner_transfer_msg(update, oldowner, game.owner)
+        if game.finished and not game.has_active_players():
+            logger.info(
+                f"Game stopped (abandoned) - chat_id {update.message.chat.id}"
+            )
+            answer(update, f"{STOP} Last player kicked. Game is over.")
+        score_messages(update, kicked, game.finished)
+        if game.finished:
+            return
+        current_turn_msg(update)
+    except PlayerError as e:
+        answer(update, str(e))
+
+
 def roster_check(func):
     @wraps(func)
     def wrapper(_, update):
@@ -274,7 +313,9 @@ def join(_, update):
         f"NOTE: Уou can also use /leave later to leave a game in progress. "
         f"This will forfeit your remaining turns and any remaining unfilled "
         f"scoreboard boxes will be filled with zeros. However, you will still "
-        f"be listed in game totals with your last score."
+        f"be listed in game totals with your last score.\n\n"
+        f"Owner can also {KICK} /kick player, whose turn is it now "
+        f"(e.g. to get rid of idling player, who blocks the game progress)."
     )
 
 
@@ -661,6 +702,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('stop', stop))
     updater.dispatcher.add_handler(CommandHandler('join', join))
     updater.dispatcher.add_handler(CommandHandler('leave', leave))
+    updater.dispatcher.add_handler(CommandHandler('kick', kick))
     updater.dispatcher.add_handler(CommandHandler('roll', roll))
     updater.dispatcher.add_handler(CommandHandler('reroll', reroll))
     updater.dispatcher.add_handler(CommandHandler('help', bot_help))
