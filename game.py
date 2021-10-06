@@ -116,6 +116,8 @@ class Game(object):
                     return
                 if player == self.get_current_player():
                     self.rotate_turn()
+                if self.owner == player:
+                    self.owner = self.get_current_player()
                 return
             else:
                 raise PlayerError(f"{ERROR} You have already left the game.")

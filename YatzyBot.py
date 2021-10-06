@@ -285,6 +285,7 @@ def leave(_, update):
     try:
         is_lobby = not game.started
         turn = None
+        oldowner = game.owner
         if not is_lobby:
             turn = game.get_current_player()
         lobby = " lobby" if is_lobby else ""
@@ -298,6 +299,7 @@ def leave(_, update):
         answer(update, str(e))
         return
     answer(update, f"{LEAVE} {player} has left the game{lobby}!")
+    owner_transfer_msg(update, oldowner, game.owner)
     if game.finished and not game.has_active_players():
         logger.info(
             f"Game stopped (abandoned) - chat_id {update.message.chat.id}"
