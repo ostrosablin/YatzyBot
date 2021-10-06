@@ -110,7 +110,8 @@ class Game(object):
             if player.is_active(self):
                 self.scoreboard.zero_scoreboard(player)
                 player.deactivate(self)
-                if not self.has_active_players():
+                finished = self.scoreboard.is_finished()
+                if not self.has_active_players() or finished:
                     self.stop_game(player, True)
                     return
                 if player == self.get_current_player():
