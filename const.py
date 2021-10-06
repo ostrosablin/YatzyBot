@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Timing constants
+INACTIVITY_TIMEOUT = 900
+
 # General emojis
 WILDCARD_DICE = "*️⃣"
 ROLL = "🎲"

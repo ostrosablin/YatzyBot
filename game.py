@@ -22,7 +22,7 @@ from time import time
 from random import shuffle
 from functools import wraps
 
-from const import START, ERROR, STOP, ROLL
+from const import START, ERROR, STOP, ROLL, INACTIVITY_TIMEOUT
 from dice import Dice
 from error import PlayerError
 from scoreboard import Scoreboard
@@ -370,8 +370,9 @@ class Game(object):
     @is_usable_any_turn
     def stop_game(self, player, completed=False):
         """Stop game"""
-        if not completed and player != self.owner:
-            raise PlayerError(f"{ERROR} Only owner can do this!")
+        if (time() - self.last_op) < INACTIVITY_TIMEOUT:
+            if not completed and player != self.owner:
+                raise PlayerError(f"{ERROR} Only owner can do this!")
         self.started = False
         self.finished = True
         self.last_op = 0
