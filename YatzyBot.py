@@ -310,7 +310,7 @@ def join(_, update):
         update,
         f"{JOIN} {player} has joined the game!\n\n"
         f"{LEAVE} /leave - Leave the game lobby.\n\n"
-        f"NOTE: Уou can also use /leave later to leave a game in progress. "
+        f"NOTE: You can also use /leave later to leave a game in progress. "
         f"This will forfeit your remaining turns and any remaining unfilled "
         f"scoreboard boxes will be filled with zeros. However, you will still "
         f"be listed in game totals with your last score.\n\n"
