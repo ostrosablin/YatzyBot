@@ -552,7 +552,8 @@ def current_turn_msg(update):
         f"{player}\n\n"
         f"Use {ROLL} /roll to roll dice.\n\n"
         f"Use {SCORE} /score to view your scoreboard.\n\n"
-        f"Use {SCORE_ALL} /score_all to view everyone's total score.\n\n"
+        f"Use {SCORE} /score_all to view everyone's scoreboards.\n\n"
+        f"Use {SCORE_ALL} /score_total to view everyone's total score.\n\n"
         f"{saved}"
     )
 
@@ -592,20 +593,29 @@ def commit_move(_, update):
 
 def scoreboard_msg(update, player):
     try:
-        scores = get_game(update).scores_player(player)
+        game = get_game(update)
+        if player is None:
+            playerlist = game.players
+        else:
+            playerlist = [player]
+        for plr in playerlist:
+            scores = game.scores_player(plr)
+            answer(
+                update,
+                f"{SCORE} Scoreboard for {plr}:\n\n`{scores}`",
+                parse_mode=ParseMode.MARKDOWN
+            )
     except PlayerError as e:
         answer(update, str(e))
-        return
-    answer(
-        update,
-        f"{SCORE} Scoreboard for {player}:\n\n`{scores}`",
-        parse_mode=ParseMode.MARKDOWN
-    )
 
 
 @chk_game_runs
 def score(_, update):
-    player = get_player(update)
+    arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
+    if arg == "score":
+        player = get_player(update)
+    else:
+        player = None
     scoreboard_msg(update, player)
 
 
@@ -707,19 +717,25 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('reroll', reroll))
     updater.dispatcher.add_handler(CommandHandler('help', bot_help))
     updater.dispatcher.add_handler(CommandHandler('move', commit))
-    updater.dispatcher.add_handler(CommandHandler('score', score))
-    updater.dispatcher.add_handler(CommandHandler('score_all', score_all))
+    updater.dispatcher.add_handler(CommandHandler('score_total', score_all))
+    updater.dispatcher.add_handler(
+        CommandHandler(['score', 'score_all'], score)
+    )
     updater.dispatcher.add_handler(
         CommandHandler(
             ['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa', 'qr'],
-            reroll_process))
+            reroll_process
+        )
+    )
     updater.dispatcher.add_handler(
         CommandHandler(
             ['on', 'ac', 'tw', 'th', 'fo', 'fi',
              'si', 'op', 'tp', '3p', 'tk', 'fk',
              '5k', 'fh', 'ca', 'to', 'ss', 'ls',
              'fs', 'ch', 'ya', 'yh', 'my'],
-            commit_move))
+            commit_move
+        )
+    )
     updater.dispatcher.add_error_handler(error)
 
     # Start the Bot
