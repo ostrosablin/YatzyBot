@@ -89,6 +89,7 @@ SIX = '6'
 # Position emojis
 LOLLIPOP = '🍭'
 POSITIONS = {1: '🥇', 2: '🥈', 3: '🥉'}
+SUFFIX = {1: 'st', 2: 'nd', 3: 'rd'}
 
 # Valid dice values
 VALUES = (ONE, TWO, THREE, FOUR, FIVE, SIX)

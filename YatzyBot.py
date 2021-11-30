@@ -112,7 +112,9 @@ def _game_chooser_msg(update):
     answer(update, reply)
 
 
-def _game_start_msg(update):
+def _game_start_msg(update, turn_order_messages):
+    for msg in turn_order_messages:
+        answer(update, msg)
     msg = (
         f"{START} Game begins! Roll dice with {ROLL} /roll command."
         f"\n\nTo stop the game, use {STOP} /stop command.\n\n"
@@ -129,9 +131,9 @@ def start(_, update):
         _game_chooser_msg(update)
     elif not gamemanager.is_game_running(update.message.chat):
         try:
+            turn_order_msgs = game.start_game(get_player(update))
             logger.info(f"Game started - chat_id {update.message.chat.id}")
-            game.start_game(get_player(update))
-            _game_start_msg(update)
+            _game_start_msg(update, turn_order_msgs)
         except PlayerError as e:
             answer(update, str(e))
     else:

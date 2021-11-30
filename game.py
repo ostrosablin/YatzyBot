@@ -19,10 +19,9 @@
 
 from collections import UserString, defaultdict
 from time import time
-from random import shuffle
 from functools import wraps
 
-from const import START, ERROR, STOP, ROLL, INACTIVITY_TIMEOUT
+from const import START, ERROR, STOP, ROLL, INACTIVITY_TIMEOUT, SUFFIX
 from dice import Dice
 from error import PlayerError
 from scoreboard import Scoreboard
@@ -30,28 +29,34 @@ from scoreboard import Scoreboard
 
 def is_usable(func):
     """Decorator to check command for basic validity"""
+
     @wraps(func)
     def wrapper(self, player, *args, **kwargs):
         self.chk_command_usable(player)
         return func(self, player, *args, **kwargs)
+
     return wrapper
 
 
 def is_usable_any_turn(func):
     """Decorator to check command for basic validity"""
+
     @wraps(func)
     def wrapper(self, player, *args, **kwargs):
         self.chk_command_usable_any_turn(player)
         return func(self, player, *args, **kwargs)
+
     return wrapper
 
 
 def is_reroll_sane(func):
     """Decorator to check reroll correctness"""
+
     @wraps(func)
     def wrapper(self, player, dice):
         self.reroll_precheck(player, dice)
         return func(self, player, dice)
+
     return wrapper
 
 
@@ -352,6 +357,61 @@ class Game(object):
             raise PlayerError(f"{ERROR} This dice is not queued for reroll.")
         self.reroll_pool.remove(dice)
 
+    def _decide_turn_order(self):
+        """Determine turn order"""
+        new_players = []
+        players = self.players[:]
+        turn_messages = []
+        turn = 0
+        current_message = []
+
+        def roll_and_stats(playerlist):
+            rolls = []
+            for player in playerlist:
+                roll = Dice.roll_single()
+                rolls.append(roll)
+                current_message.append(f"{player} rolls {roll.to_emoji()}\n")
+            max_dice = max(rolls)
+            max_players = []
+            for player in range(len(playerlist)):
+                if rolls[player] == max_dice:
+                    max_players.append(playerlist[player])
+            return max_dice, max_players
+
+        while players:
+            if len(players) == 1 and turn == 0:  # Nothing to do, solo
+                return turn_messages
+            elif len(players) == 1:  # Last player
+                current_message.append(
+                    f"{players[0]} is {turn + 1}{SUFFIX.get(turn + 1, 'th')} "
+                    f"and moves the last."
+                )
+                new_players.append(players.pop(0))
+            else:
+                if turn == 0:
+                    current_message.append("Let's decide the turn order.\n\n")
+                max_roll, max_rollers = roll_and_stats(players)
+                while len(max_rollers) > 1:
+                    current_message.append(
+                        f"\n{len(max_rollers)} players have tied for "
+                        f"{turn + 1}{SUFFIX.get(turn + 1, 'th')} place "
+                        f"with {max_roll.to_emoji()}."
+                    )
+                    turn_messages.append(''.join(current_message))
+                    current_message = []
+                    max_roll, max_rollers = roll_and_stats(max_rollers)
+                current_message.append(
+                    f"\n{max_rollers[0]} has rolled {max_roll.to_emoji()} "
+                    f"and moves {turn + 1}{SUFFIX.get(turn + 1, 'th')}."
+                )
+                new_players.append(max_rollers[0])
+                players.remove(max_rollers[0])
+            turn_messages.append(''.join(current_message))
+            current_message = []
+            turn += 1
+        self.players = new_players
+        return turn_messages
+
     def start_game(self, player):
         """Begin game"""
         if self.finished:
@@ -364,11 +424,12 @@ class Game(object):
             )
         if player != self.owner:
             raise PlayerError(f"{ERROR} Only owner can do this!")
-        shuffle(self.players)
+        turn_order_msgs = self._decide_turn_order()
         self.scoreboard = Scoreboard(
             self.players, self.yahtzee, self.forced, self.maxi)
         self.started = True
         self.last_op = time()
+        return turn_order_msgs
 
     @is_usable_any_turn
     def stop_game(self, player, completed=False):
