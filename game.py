@@ -21,7 +21,19 @@ from collections import UserString, defaultdict
 from time import time
 from functools import wraps
 
-from const import START, ERROR, STOP, ROLL, INACTIVITY_TIMEOUT, SUFFIX
+from const import (
+    START,
+    ERROR,
+    STOP,
+    ROLL,
+    INACTIVITY_TIMEOUT,
+    SUFFIX,
+    TIE,
+    ORDER,
+    FIRST,
+    MIDDLE,
+    LAST,
+)
 from dice import Dice
 from error import PlayerError
 from scoreboard import Scoreboard
@@ -370,7 +382,9 @@ class Game(object):
             for player in playerlist:
                 roll = Dice.roll_single()
                 rolls.append(roll)
-                current_message.append(f"{player} rolls {roll.to_emoji()}\n")
+                current_message.append(
+                    f"{ROLL} {player} rolls {roll.to_emoji()}.\n"
+                )
             max_dice = max(rolls)
             max_players = []
             for player in range(len(playerlist)):
@@ -383,26 +397,36 @@ class Game(object):
                 return turn_messages
             elif len(players) == 1:  # Last player
                 current_message.append(
-                    f"{players[0]} is {turn + 1}{SUFFIX.get(turn + 1, 'th')} "
-                    f"and moves the last."
+                    f"{LAST} {players[0]} is {turn + 1}"
+                    f"{SUFFIX.get(turn + 1, 'th')} and moves the last."
                 )
                 new_players.append(players.pop(0))
             else:
                 if turn == 0:
-                    current_message.append("Let's decide the turn order.\n\n")
+                    current_message.append(
+                        f"{ORDER} Let's decide the turn order.\n\n"
+                    )
+                else:
+                    current_message.append(
+                        f"{ORDER} Let's find out who will be {turn + 1}"
+                        f"{SUFFIX.get(turn + 1, 'th')}."
+                    )
                 max_roll, max_rollers = roll_and_stats(players)
                 while len(max_rollers) > 1:
                     current_message.append(
-                        f"\n{len(max_rollers)} players have tied for "
-                        f"{turn + 1}{SUFFIX.get(turn + 1, 'th')} place "
-                        f"with {max_roll.to_emoji()}."
+                        f"\n{TIE} {len(max_rollers)} players have rolled "
+                        f"{max_roll.to_emoji()} and tied. An extra roll will"
+                        f"be necessary to decide who will move "
+                        f"{turn + 1}{SUFFIX.get(turn + 1, 'th')}."
                     )
                     turn_messages.append(''.join(current_message))
                     current_message = []
                     max_roll, max_rollers = roll_and_stats(max_rollers)
+                orderemoji = FIRST if turn == 0 else MIDDLE
                 current_message.append(
-                    f"\n{max_rollers[0]} has rolled {max_roll.to_emoji()} "
-                    f"and moves {turn + 1}{SUFFIX.get(turn + 1, 'th')}."
+                    f"\n{orderemoji} {max_rollers[0]} has rolled "
+                    f"{max_roll.to_emoji()} and moves "
+                    f"{turn + 1}{SUFFIX.get(turn + 1, 'th')}."
                 )
                 new_players.append(max_rollers[0])
                 players.remove(max_rollers[0])

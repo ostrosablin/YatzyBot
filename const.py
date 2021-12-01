@@ -40,6 +40,12 @@ HELLO = "✋"
 CONGRATS = "🎉"
 OWNER = "👮‍♂️"
 KICK = "🥾"
+SCORED = "💰"
+TIE = "⚖️"
+ORDER = "🔮"
+FIRST = "🟢"
+MIDDLE = "🟡"
+LAST = "🔴"
 
 # Move icons
 MOVE_ICONS = {
