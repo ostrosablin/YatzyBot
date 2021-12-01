@@ -47,7 +47,9 @@ from const import (
     MOVE_BOX_ICONS,
     MOVE_ICONS,
     MAP_TURNS,
-    MAP_COMMANDS)
+    MAP_COMMANDS,
+    SCORED,
+)
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
 from gamemanager import GameManager
@@ -566,7 +568,7 @@ def move_msg(update, saved_rerolls, player, move, points):
         acquired_extra = f"{INFO} Saved +{saved_rerolls} extra reroll(s)"
     answer(
         update,
-        f"{MOVE} {player} scores {MOVE_ICONS[move]} {MAP_TURNS[move]}"
+        f"{SCORED} {player} scores {MOVE_ICONS[move]} {MAP_TURNS[move]}"
         f" for {points} points.\n\n"
         f"{acquired_extra}"
     )
