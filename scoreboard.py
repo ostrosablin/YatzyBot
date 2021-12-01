@@ -356,8 +356,8 @@ class Scoreboard(object):
         output = []
         place = 1
         last_score = 0
-        min_score = min(scores, key=scores.get)
-        max_score = max(scores, key=scores.get)
+        min_score = min(scores.values())
+        max_score = max(scores.values())
         for player in scores:
             if scores[player] == last_score:
                 place = max(1, place - 1)
@@ -366,7 +366,7 @@ class Scoreboard(object):
                 if scores[player] == min_score:
                     placeemoji = LOLLIPOP
             output.append(
-                f"{placeemoji}{place}"
+                f"{placeemoji} {place}"
                 f"{SUFFIX.get(place, 'th')} place - "
                 f"{player} ({scores[player]} points)"
             )
