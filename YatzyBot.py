@@ -457,10 +457,24 @@ def explain_quick_reroll():
 def quick_reroll_set(game, command):
     if not command:
         explain_quick_reroll()
+    allowed = f"12345{'6' if game.maxi else ''}"
     if "a" in command or "-" in command:
-        command = f"12345{'6' if game.maxi else ''}"
+        command = allowed
+    for digit in allowed:
+        if command.count(digit) > 1:
+            raise PlayerError(
+                f"{ERROR} Duplicate digits were found in quick reroll"
+                f" command. This likely indicates a typo. Please"
+                f" check your input and try again."
+            )
+    for char in command:
+        if char not in allowed and char not in " \t\nh!":
+            raise PlayerError(
+                f"{ERROR} Illegal characters were found in quick reroll"
+                f" command. This might be a typo. Please check your"
+                f" input and try again."
+            )
     if "h" in command or "!" in command:
-        allowed = f"12345{'6' if game.maxi else ''}"
         inverse = list(allowed)
         for char in command:
             if char in allowed:
