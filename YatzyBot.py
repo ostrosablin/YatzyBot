@@ -514,8 +514,8 @@ def reroll_process(_, update):
         elif arg == 'sa':
             game.reroll_pool_select_all(player)
             send_dice(update, game)
-        elif arg == 'dr' or arg == 'qr':
-            if arg == 'qr':
+        elif arg == 'dr' or arg == 'qr' or arg == 'q':
+            if arg == 'qr' or arg == 'q':
                 to_reroll = quick_reroll_set(game, "".join(args).lower())
                 dice = game.reroll_dice(player, to_reroll)
                 game.reroll_pool_clear(player)
@@ -741,7 +741,7 @@ def main():
     )
     updater.dispatcher.add_handler(
         CommandHandler(
-            ['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa', 'qr'],
+            ['1', '2', '3', '4', '5', '6', 'dr', 'rr', 'sa', 'qr', 'q'],
             reroll_process
         )
     )
