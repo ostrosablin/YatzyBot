@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import Counter, OrderedDict
-
 from tabulate import tabulate
 
 from const import POSITIONS, LOLLIPOP, ERROR, SUFFIX
@@ -188,6 +187,9 @@ class Scoreboard(object):
             upper_section_bonus -= 21
         return upper_section_bonus
 
+    def get_upper_section_bonus_value(self):
+        return 35 if self.yahtzee else (50 if not self.maxi else 100)
+
     def award_upper_section_bonus(self, player):
         """Check if Upper Section Bonus is to be awarded and give it"""
         upper_section_bonus = self.get_upper_section_bonus_score()
@@ -196,7 +198,7 @@ class Scoreboard(object):
             # And if we didn't score the bonus yet
             if not self.scores[player].get("Up. Sect. Bonus").score:
                 # Add 50 extra points to Upper Section Bonus (35 for Yahtzee)
-                bonus = 35 if self.yahtzee else (50 if not self.maxi else 100)
+                bonus = self.get_upper_section_bonus_value()
                 self.scores[player]["Up. Sect. Bonus"].set_score(bonus)
                 return bonus
         return 0
@@ -323,10 +325,13 @@ class Scoreboard(object):
                 up_sec_bonus = self.get_upper_section_bonus_score()
                 up_sec_total = self.scores[player].get("Up. Sect. Total").score
                 remaining = max(up_sec_bonus - up_sec_total, 0)
+                bonus_value = self.get_upper_section_bonus_value()
                 bonus = "Awarded"
                 if remaining:
                     bonus = f"{remaining} more"
-                output.append([f"Bonus if ≥ {up_sec_bonus}", bonus])
+                output.append(
+                    [f"{bonus_value} pts. if ≥ {up_sec_bonus}", bonus]
+                )
                 output.append(["", ""])
         return tabulate(output, tablefmt="simple")
 
