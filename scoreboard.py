@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import Counter, OrderedDict
+
 from tabulate import tabulate
 
 from const import POSITIONS, LOLLIPOP, ERROR, SUFFIX
@@ -203,6 +204,21 @@ class Scoreboard(object):
                 return bonus
         return 0
 
+    def check_upper_section_bonus_achievable(self, player):
+        dice_count = 6 if self.maxi else 5
+        upper_boxes = list(self.scores[player].values())[:6]
+        up_sec_target = self.get_upper_section_bonus_score()
+        max_achievable = 0
+        for i in range(6):
+            if upper_boxes[i].score is not None:
+                max_achievable += upper_boxes[i].score
+            else:
+                max_achievable += (i + 1) * dice_count
+        unsatisfied_points = max(up_sec_target - max_achievable, 0)
+        if unsatisfied_points:
+            return False
+        return True
+
     def zero_scoreboard(self, player):
         for box in list(self.scores[player].values()):
             if box.score is None:
@@ -326,8 +342,11 @@ class Scoreboard(object):
                 up_sec_total = self.scores[player].get("Up. Sect. Total").score
                 remaining = max(up_sec_bonus - up_sec_total, 0)
                 bonus_value = self.get_upper_section_bonus_value()
+                lost = not self.check_upper_section_bonus_achievable(player)
                 bonus = "Awarded"
-                if remaining:
+                if lost:
+                    bonus = "Missed"
+                elif remaining:
                     bonus = f"{remaining} more"
                 output.append(
                     [f"{bonus_value} pts. if ≥ {up_sec_bonus}", bonus]
