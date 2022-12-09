@@ -18,8 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import UserString, defaultdict
-from time import time
 from functools import wraps
+from time import time
 
 from const import (
     START,
@@ -409,13 +409,13 @@ class Game(object):
                 else:
                     current_message.append(
                         f"{ORDER} Let's find out who will be {turn + 1}"
-                        f"{SUFFIX.get(turn + 1, 'th')}."
+                        f"{SUFFIX.get(turn + 1, 'th')}.\n\n"
                     )
                 max_roll, max_rollers = roll_and_stats(players)
                 while len(max_rollers) > 1:
                     current_message.append(
                         f"\n{TIE} {len(max_rollers)} players have rolled "
-                        f"{max_roll.to_emoji()} and tied. An extra roll will"
+                        f"{max_roll.to_emoji()} and tied. An extra roll will "
                         f"be necessary to decide who will move "
                         f"{turn + 1}{SUFFIX.get(turn + 1, 'th')}."
                     )
