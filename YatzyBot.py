@@ -447,7 +447,7 @@ def explain_quick_reroll():
         f"type their positions, like that:\n\n"
         f"/qr 123\n\n"
         f"To reroll all dice, any of these commands will work:"
-        f"\n\n/qr a\n/qr all\n/qr -\n\n"
+        f"\n\n/qr a\n/qr all\n/qr -\n/qr *\n\n"
         f"If you wish to hold particular dice (e.g. keep last "
         f"two), and reroll others, any of these will work:"
         f"\n\n/qr h45\n/qr !45"
@@ -458,7 +458,7 @@ def quick_reroll_set(game, command):
     if not command:
         explain_quick_reroll()
     allowed = f"12345{'6' if game.maxi else ''}"
-    if "a" in command or "-" in command:
+    if "a" in command or "-" in command or "*" in command:
         command = allowed
     for digit in allowed:
         if command.count(digit) > 1:
