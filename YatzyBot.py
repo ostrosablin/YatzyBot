@@ -368,12 +368,22 @@ def roll_msg(update, game, player, dice):
             rerolllink = ""
     saved = get_extra_rerolls(game, player)
     rollnumber = game.reroll
+    movelink = f"{MOVE} /move to choose a move.\n\n"
+    automove = ""
+    if not rerolllink:
+        options = game.get_hand_score_options(player)
+        if len(options) == 1:
+            movelink = f"{INFO} You have no rerolls left and only one valid" \
+                       f" move, finishing turn automatically.\n\n"
+            automove = MAP_COMMANDS[list(options.keys())[0]]
     answer(
         update,
         f"{ROLL} {player} has rolled (Reroll {rollnumber}/2):\n\n"
         f"{' '.join([d.to_emoji() for d in dice])}\n\n"
-        f"{rerolllink}{MOVE} /move to choose a move.\n\n{saved}"
+        f"{rerolllink}{movelink}{saved}"
     )
+    if automove:
+        process_move(update, game, player, automove)
 
 
 @chk_game_runs
@@ -588,25 +598,29 @@ def move_msg(update, saved_rerolls, player, move, points):
     )
 
 
-@chk_game_runs
-def commit_move(_, update):
-    arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
-    game = get_game(update)
-    player = get_player(update)
+def process_move(update, game, player, move):
     saved_rerolls = 0
     if game.maxi:
         saved_rerolls = (2 - game.reroll)
     try:
-        score_pos = game.commit_turn(player, MAP_TURNS[arg])
+        score_pos = game.commit_turn(player, MAP_TURNS[move])
     except (PlayerError, IllegalMoveError) as e:
         answer(update, str(e))
         return
-    move_msg(update, saved_rerolls, player, arg, score_pos)
+    move_msg(update, saved_rerolls, player, move, score_pos)
     scoreboard_msg(update, player)
     if gamemanager.game(update.message.chat).is_completed():
         totalscore_msg(update, finished=True)
     else:
         current_turn_msg(update)
+
+
+@chk_game_runs
+def commit_move(_, update):
+    arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
+    game = get_game(update)
+    player = get_player(update)
+    process_move(update, game, player, arg)
 
 
 def scoreboard_msg(update, player):
