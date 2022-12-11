@@ -359,6 +359,15 @@ def leave(_, update):
         current_turn_msg(update)
 
 
+def mk_movelink(options):
+    if len(options) != 1:
+        return f"{MOVE} /move to choose a move.\n\n"
+    else:
+        option = next(iter(options))
+        return (f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
+                f"{option} - {options[option]} points.\n\n")
+
+
 def roll_msg(update, game, player, dice):
     rerolllink = f"{ROLL} /reroll to choose dice for reroll.\n\n" \
                  f"{ROLL} /qr <positions> to do a quick reroll.\n\n"
@@ -370,14 +379,14 @@ def roll_msg(update, game, player, dice):
             rerolllink = ""
     saved = get_extra_rerolls(game, player)
     rollnumber = game.reroll
-    movelink = f"{MOVE} /move to choose a move.\n\n"
+    options = game.get_hand_score_options(player)
+    movelink = mk_movelink(options)
     automove = ""
     if not rerolllink:
-        options = game.get_hand_score_options(player)
         if len(options) == 1:
             movelink = f"{INFO} You have no rerolls left and only one valid" \
                        f" move, finishing turn automatically.\n\n"
-            automove = MAP_COMMANDS[list(options.keys())[0]]
+            automove = MAP_COMMANDS[next(iter(options))]
     answer(
         update,
         f"{ROLL} {player} has rolled (Reroll {rollnumber}/2):\n\n"
@@ -406,6 +415,7 @@ def reroll_msg(update, game, player, dice):
     if game.maxi:
         sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
     rollnumber = game.reroll
+    movelink = mk_movelink(game.get_hand_score_options(player))
     msg = (
         f"{ROLL} Reroll menu (Reroll {rollnumber}/2):\n\n"
         f"{dice_to_wildcard(game)}\n\n"
@@ -417,7 +427,7 @@ def reroll_msg(update, game, player, dice):
         f"{dice[4].to_emoji()} /5 - Toggle reroll fifth dice.\n\n"
         f"{sixth}{SELECT_ALL} /sa - Select all.\n\n"
         f"{DO_REROLL} /dr - Do reroll.\n\n"
-        f"{MOVE} /move - to choose a move.\n\n{saved}"
+        f"{movelink}{saved}"
     )
     if game.reroll > 1:
         if not saved:  # We don't have saved Maxi Yatzy turns
