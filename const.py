@@ -46,6 +46,8 @@ ORDER = "🔮"
 FIRST = "🟢"
 MIDDLE = "🟡"
 LAST = "🔴"
+UPPER = "🔼"
+LOWER = "🔽"
 
 # Move icons
 MOVE_ICONS = {

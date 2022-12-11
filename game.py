@@ -478,6 +478,21 @@ class Game(object):
         self.last_op = time()
         return kicked_player
 
+    def get_game_name(self):
+        name = []
+        if self.forced:
+            name.append("Forced")
+        if self.maxi:
+            name.append("Maxi")
+        name.append("Yahtzee" if self.yahtzee else "Yatzy")
+        return " ".join(name)
+
+    def get_upper_section_bonus_score(self):
+        return self.scoreboard.get_upper_section_bonus_score()
+
+    def get_upper_section_bonus_value(self):
+        return self.scoreboard.get_upper_section_bonus_value()
+
 
 class Player(UserString):
     """Class for representing a player"""

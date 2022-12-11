@@ -49,6 +49,8 @@ from const import (
     MAP_TURNS,
     MAP_COMMANDS,
     SCORED,
+    UPPER,
+    LOWER,
 )
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
@@ -681,13 +683,143 @@ def score_all(_, update):
 
 def bot_help(_, update):
     logger.info("Help invoked")
-    answer(
-        update,
-        f"{HELP} Use {START} /start command to begin and follow the"
-        f" instructions.\n\nYou can read on Yatzy and Yahtzee rules here:\n"
-        f"https://en.wikipedia.org/wiki/Yatzy\n"
-        f"https://en.wikipedia.org/wiki/Yahtzee"
-    )
+    game = get_game(update)
+    if not gamemanager.is_game_created(update.message.chat) or game.finished:
+        answer(
+            update,
+            f"{HELP} Use {START} /start command to begin and follow the "
+            f"instructions.\n\nYou can read on Yatzy and Yahtzee rules here:\n"
+            f"https://en.wikipedia.org/wiki/Yatzy\n"
+            f"https://en.wikipedia.org/wiki/Yahtzee\n\n"
+            f"Use {HELP} /help command again during a game to see help for "
+            f"current game variation."
+        )
+    else:
+        avg_dice = 3 + (1 if game.maxi else 0) - (1 if game.forced else 0)
+        avg_dice_words = {2: "two", 3: "three", 4: "four"}
+        msg = [f"{HELP} {game.get_game_name()} rules.\n"]
+        if game.forced:
+            msg.append(f"{INFO} Forced rule: In this variant you must "
+                       f"score combinations in exactly same sequence as "
+                       f"listed in scoreboard, i.e. starting with Ones, then "
+                       f"Twos and so on. Due to added difficulty, requirement "
+                       f"for upper section bonus is reduced to "
+                       f"{game.get_upper_section_bonus_score()}.\n")
+        msg.append(f"{UPPER} Upper section:\n")
+        if game.yahtzee:
+            msg.append(f"{MOVE_ICONS['ac']} Aces: Any combination. Score is "
+                       f"sum of all dice showing the number 1.")
+        else:
+            msg.append(f"{MOVE_ICONS['on']} Ones: Any combination. Score is "
+                       f"sum of all dice showing the number 1.")
+        msg.append(f"{MOVE_ICONS['tw']} Twos: Any combination. Score is sum "
+                   f"of all dice showing the number 2.")
+        msg.append(f"{MOVE_ICONS['th']} Threes: Any combination. Score is sum "
+                   f"of all dice showing the number 3.")
+        msg.append(f"{MOVE_ICONS['fo']} Fours: Any combination. Score is sum "
+                   f"of all dice showing the number 4.")
+        msg.append(f"{MOVE_ICONS['fi']} Fives: Any combination. Score is sum "
+                   f"of all dice showing the number 5.")
+        msg.append(f"{MOVE_ICONS['si']} Sixes: Any combination. Score is sum "
+                   f"of all dice showing the number 6.\n")
+        msg.append(f"{SCORED} Upper section bonus: If you manage to score "
+                   f"at least {game.get_upper_section_bonus_score()} points "
+                   f"(an average of {avg_dice_words[avg_dice]} in each box) "
+                   f"in the upper section, you are awarded a bonus of "
+                   f"{game.get_upper_section_bonus_value()} points.\n")
+        msg.append(f"{LOWER} Lower section:\n")
+        if not game.yahtzee:
+            msg.append(f"{MOVE_ICONS['op']} One Pair: Two dice showing the "
+                       f"same number (if there's more than one pair, highest "
+                       f"one is chosen). Score is sum of those two dice.")
+            if game.maxi:
+                maxi_pair_remark = " (if there's more than two pairs, " \
+                                   "highest two are chosen)"
+            else:
+                maxi_pair_remark = ""
+            msg.append(f"{MOVE_ICONS['tp']} Two Pairs: Two different pairs "
+                       f"of dice{maxi_pair_remark}. Score is sum of dice in "
+                       f"those two pairs.")
+            if game.maxi:
+                msg.append(f"{MOVE_ICONS['3p']} Three Pairs: Three different "
+                           f"pairs of dice. Score is sum of all dice.")
+        msg.append(f"{MOVE_ICONS['tk']} Three of a Kind: Three dice showing "
+                   f"same number. Score is sum of "
+                   f"{'all dice' if game.yahtzee else 'those three dice'}.")
+        msg.append(f"{MOVE_ICONS['fk']} Four of a Kind: Four dice showing "
+                   f"same number. Score is sum of "
+                   f"{'all dice' if game.yahtzee else 'those four dice'}.")
+        if game.maxi:
+            msg.append(f"{MOVE_ICONS['5k']} Five of a Kind: Five dice showing "
+                       f"same number. Score is sum of those five dice.")
+        msg.append(f"{MOVE_ICONS['fh']} Full House: A set of three dice of "
+                   f"one number and two dice of different number. Score is "
+                   f"{'25 points' if game.yahtzee else 'sum of all dice'}.")
+        if game.maxi:
+            msg.append(f"{MOVE_ICONS['ca']} Castle: Two different sets of "
+                       f"three dice showing same number. Score is sum of all "
+                       f"dice.")
+            msg.append(f"{MOVE_ICONS['to']} Tower: A set of four dice of one "
+                       f"number and two dice of different number. Score is "
+                       f"sum of all dice.")
+        if game.yahtzee:
+            msg.append(f"{MOVE_ICONS['ss']} Small Straight: Any set of four "
+                       f"sequential dice (e.g. 1-2-3-4, 2-3-4-5 or 3-4-5-6). "
+                       f"Score is 30 points.")
+            msg.append(f"{MOVE_ICONS['ls']} Large Straight: Any set of five "
+                       f"sequential dice (e.g. 1-2-3-4-5 or 2-3-4-5-6). Score "
+                       f"is 40 points.")
+        else:
+            msg.append(f"{MOVE_ICONS['ss']} Small Straight: The combination "
+                       f"1-2-3-4-5. Score is 15 points (sum of all dice).")
+            msg.append(f"{MOVE_ICONS['ls']} Large Straight: The combination "
+                       f"2-3-4-5-6. Score is 20 points (sum of all dice).")
+            if game.maxi:
+                msg.append(f"{MOVE_ICONS['fs']} Full Straight: The "
+                           f"combination 1-2-3-4-5-6. Score is 21 points "
+                           f"(sum of all dice).")
+        msg.append(f"{MOVE_ICONS['ch']} Chance: Any combination. Score is sum "
+                   f"of all dice.")
+        if game.yahtzee:
+            msg.append(f"{MOVE_ICONS['yh']} Yahtzee: All five dice showing "
+                       f"the same number. Score is 50 points.\n")
+        else:
+            if game.maxi:
+                msg.append(f"{MOVE_ICONS['my']} Maxi Yatzy: All six dice "
+                           f"showing the same number. Score is 100 points.\n")
+            else:
+                msg.append(f"{MOVE_ICONS['ya']} Yatzy: All five dice showing "
+                           f"the same number. Score is 50 points.\n")
+        if game.maxi:
+            msg.append(f"{INFO} Turn saving mechanics: You can save unused "
+                       f"rerolls (e.g. if you move right after initial roll "
+                       f"or after first reroll) and use them during future "
+                       f"turns.\n")
+        if game.yahtzee:
+            msg.append(f"{SCORED} Yahtzee Bonus: If you roll more than one "
+                       f"Yahtzee during a game and have Yahtzee box filled "
+                       f"with 50 points, you are awarded a bonus of "
+                       f"100 points for second and any subsequent Yahtzees.\n")
+            msg.append(f"{WILDCARD_DICE} Joker Rule: If you are awarded a "
+                       f"Yahtzee Bonus, you can score your hand as a Joker "
+                       f"under following rules:\n\n{MOVE_ICONS['ac']} If the "
+                       f"corresponding Upper Section box is unused then that "
+                       f"category must be used.\n{MOVE_ICONS['tw']} If the "
+                       f"corresponding Upper Section box has been used "
+                       f"already, a Lower Section box must be used. The "
+                       f"Yahtzee acts as a Joker so that the Full House, "
+                       f"Small Straight and Large Straight categories can be "
+                       f"used to score 25, 30 or 40 points (respectively), "
+                       f"even though the dice do not meet the normal "
+                       f"requirement for those categories.\n"
+                       f"{MOVE_ICONS['th']} If the corresponding Upper "
+                       f"Section box and all Lower Section boxes have been "
+                       f"used, an unused Upper Section box must be used, "
+                       f"scoring 0 points.\n")
+        answer(
+            update,
+            "\n".join(msg)
+        )
 
 
 def error(_, update, err):
