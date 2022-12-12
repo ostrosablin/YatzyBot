@@ -51,6 +51,7 @@ from const import (
     SCORED,
     UPPER,
     LOWER,
+    JOKER,
 )
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
@@ -718,20 +719,20 @@ def bot_help(_, update):
         msg.append(f"{UPPER} Upper section:\n")
         if game.yahtzee:
             msg.append(f"{MOVE_ICONS['ac']} Aces: Any combination. Score is "
-                       f"sum of all dice showing the number 1.")
+                       f"sum of dice showing the number 1.")
         else:
             msg.append(f"{MOVE_ICONS['on']} Ones: Any combination. Score is "
-                       f"sum of all dice showing the number 1.")
+                       f"sum of dice showing the number 1.")
         msg.append(f"{MOVE_ICONS['tw']} Twos: Any combination. Score is sum "
-                   f"of all dice showing the number 2.")
+                   f"of dice showing the number 2.")
         msg.append(f"{MOVE_ICONS['th']} Threes: Any combination. Score is sum "
-                   f"of all dice showing the number 3.")
+                   f"of dice showing the number 3.")
         msg.append(f"{MOVE_ICONS['fo']} Fours: Any combination. Score is sum "
-                   f"of all dice showing the number 4.")
+                   f"of dice showing the number 4.")
         msg.append(f"{MOVE_ICONS['fi']} Fives: Any combination. Score is sum "
-                   f"of all dice showing the number 5.")
+                   f"of dice showing the number 5.")
         msg.append(f"{MOVE_ICONS['si']} Sixes: Any combination. Score is sum "
-                   f"of all dice showing the number 6.\n")
+                   f"of dice showing the number 6.\n")
         msg.append(f"{SCORED} Upper section bonus: If you manage to score "
                    f"at least {game.get_upper_section_bonus_score()} points "
                    f"(an average of {avg_dice_words[avg_dice]} in each box) "
@@ -810,7 +811,7 @@ def bot_help(_, update):
                        f"Yahtzee during a game and have Yahtzee box filled "
                        f"with 50 points, you are awarded a bonus of "
                        f"100 points for second and any subsequent Yahtzees.\n")
-            msg.append(f"{WILDCARD_DICE} Joker Rule: If you are awarded a "
+            msg.append(f"{JOKER} Joker Rule: If you are awarded a "
                        f"Yahtzee Bonus, you can score your hand as a Joker "
                        f"under following rules:\n\n{MOVE_ICONS['ac']} If the "
                        f"corresponding Upper Section box is unused then that "
