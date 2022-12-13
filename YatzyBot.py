@@ -366,23 +366,33 @@ def mk_movelink(options):
     best_value = None
     best_length = 0
     best_list = []
+    best_list_tail = []
+    fetchnext = False
     for option in options:
         if best_value is None:
             best_value = options[option]
+        if fetchnext and options[option]:
+            best_value = options[option]
+            fetchnext = False
         if options[option] < best_value:
             break
+        if option == "Chance":
+            fetchnext = True
+            target = best_list_tail
+        else:
+            target = best_list
         best_length += 1
-        best_list.append(
+        target.append(
             f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
             f"{option} - {options[option]} points.\n\n"
         )
     if len(options) != best_length:
         movelink.append(f"{MOVE} /move to choose a move.\n\n")
         movelink.append(
-            f"\n{BEST} Top scoring move{'' if best_length == 1 else 's'}:\n\n"
+            f"\n{BEST} Best move{'' if best_length == 1 else 's'}:\n\n"
         )
-        print(best_length)
     movelink.extend(best_list)
+    movelink.extend(best_list_tail)
     return "".join(movelink)
 
 
