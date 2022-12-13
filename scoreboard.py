@@ -219,6 +219,15 @@ class Scoreboard(object):
             return False
         return True
 
+    def calculate_expected_delta(self, player):
+        upper_boxes = list(self.scores[player].values())[:6]
+        avg_dice_for_bonus = self.get_upper_section_bonus_score() // 21
+        delta = 0
+        for i in range(6):
+            if upper_boxes[i].score is not None:
+                delta += upper_boxes[i].score - ((i + 1) * avg_dice_for_bonus)
+        return delta
+
     def zero_scoreboard(self, player):
         for box in list(self.scores[player].values()):
             if box.score is None:
@@ -334,15 +343,24 @@ class Scoreboard(object):
     def print_player_scores(self, player):
         """Print scoreboard for particular player"""
         output = [["", player.user.username or player.user.first_name]]
+        up_sec_bonus = self.get_upper_section_bonus_score()
+        up_sec_total = self.scores[player].get("Up. Sect. Total").score
+        remaining = max(up_sec_bonus - up_sec_total, 0)
+        bonus_value = self.get_upper_section_bonus_value()
+        lost = not self.check_upper_section_bonus_achievable(player)
         for box in self.scores[player].values():
-            output.append(
-                [box.name, "" if box.score is None else str(box.score)])
+            if box.name == "Up. Sect. Total":
+                delta_msg = ""
+                if not lost and remaining:
+                    delta = self.calculate_expected_delta(player)
+                    if delta:
+                        delta_msg = f" ({delta:+})"
+                output.append([box.name, f"{box.score}{delta_msg}"])
+            else:
+                output.append(
+                    [box.name, "" if box.score is None else str(box.score)]
+                )
             if box.name == "Up. Sect. Bonus":
-                up_sec_bonus = self.get_upper_section_bonus_score()
-                up_sec_total = self.scores[player].get("Up. Sect. Total").score
-                remaining = max(up_sec_bonus - up_sec_total, 0)
-                bonus_value = self.get_upper_section_bonus_value()
-                lost = not self.check_upper_section_bonus_achievable(player)
                 bonus = "Awarded"
                 if lost:
                     bonus = "Missed"
