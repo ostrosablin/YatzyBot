@@ -52,6 +52,7 @@ from const import (
     UPPER,
     LOWER,
     JOKER,
+    BEST,
 )
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
@@ -361,12 +362,28 @@ def leave(_, update):
 
 
 def mk_movelink(options):
-    if len(options) != 1:
-        return f"{MOVE} /move to choose a move.\n\n"
-    else:
-        option = next(iter(options))
-        return (f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
-                f"{option} - {options[option]} points.\n\n")
+    movelink = []
+    best_value = None
+    best_length = 0
+    best_list = []
+    for option in options:
+        if best_value is None:
+            best_value = options[option]
+        if options[option] < best_value:
+            break
+        best_length += 1
+        best_list.append(
+            f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
+            f"{option} - {options[option]} points.\n\n"
+        )
+    if len(options) != best_length:
+        movelink.append(f"{MOVE} /move to choose a move.\n\n")
+        movelink.append(
+            f"\n{BEST} Top scoring move{'' if best_length == 1 else 's'}:\n\n"
+        )
+        print(best_length)
+    movelink.extend(best_list)
+    return "".join(movelink)
 
 
 def roll_msg(update, game, player, dice):

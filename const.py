@@ -49,6 +49,7 @@ LAST = "🔴"
 UPPER = "🔼"
 LOWER = "🔽"
 JOKER = "🃏"
+BEST = "📈"
 
 # Move icons
 MOVE_ICONS = {
