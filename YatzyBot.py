@@ -391,6 +391,7 @@ def mk_movelink(options):
         movelink.append(
             f"\n{BEST} Best move{'' if best_length == 1 else 's'}:\n\n"
         )
+        best_list_tail.append('\n')
     movelink.extend(best_list)
     movelink.extend(best_list_tail)
     return "".join(movelink)
