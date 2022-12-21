@@ -791,9 +791,14 @@ def bot_help(_, update):
         if game.maxi:
             msg.append(f"{MOVE_ICONS['5k']} Five of a Kind: Five dice showing "
                        f"same number. Score is sum of those five dice.")
+        fh_points = 'sum of all dice'
+        if game.yahtzee:
+            fh_points = '25 points'
+        elif game.maxi:
+            fh_points = 'sum of those five dice'
         msg.append(f"{MOVE_ICONS['fh']} Full House: A set of three dice of "
                    f"one number and two dice of different number. Score is "
-                   f"{'25 points' if game.yahtzee else 'sum of all dice'}.")
+                   f"{fh_points}.")
         if game.maxi:
             msg.append(f"{MOVE_ICONS['ca']} Castle: Two different sets of "
                        f"three dice showing same number. Score is sum of all "
@@ -809,10 +814,13 @@ def bot_help(_, update):
                        f"sequential dice (e.g. 1-2-3-4-5 or 2-3-4-5-6). Score "
                        f"is 40 points.")
         else:
+            st_points = 'sum of all dice'
+            if game.maxi:
+                st_points = 'sum of those five dice'
             msg.append(f"{MOVE_ICONS['ss']} Small Straight: The combination "
-                       f"1-2-3-4-5. Score is 15 points (sum of all dice).")
+                       f"1-2-3-4-5. Score is 15 points ({st_points}).")
             msg.append(f"{MOVE_ICONS['ls']} Large Straight: The combination "
-                       f"2-3-4-5-6. Score is 20 points (sum of all dice).")
+                       f"2-3-4-5-6. Score is 20 points ({st_points}).")
             if game.maxi:
                 msg.append(f"{MOVE_ICONS['fs']} Full Straight: The "
                            f"combination 1-2-3-4-5-6. Score is 21 points "
