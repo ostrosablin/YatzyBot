@@ -27,7 +27,6 @@ from const import (
     STOP,
     ROLL,
     INACTIVITY_TIMEOUT,
-    SUFFIX,
     TIE,
     ORDER,
     FIRST,
@@ -78,7 +77,8 @@ class Game(object):
     def __init__(self, chat, owner, yahtzee=False, forced=False, maxi=False):
         if (maxi or forced) and yahtzee:
             raise ValueError(
-                "Error, Maxi and Forced mode is valid only for Yatzy game!"
+                "Ошибка, Макси и Последовательный режимы допустимы только для "
+                "игры Йетзи!"
             )
         self.chat = chat
         self.owner = owner
@@ -100,10 +100,10 @@ class Game(object):
         """Add a new player"""
         if self.started:
             raise PlayerError(
-                f"{ERROR} Cannot add a player into started game."
+                f"{ERROR} Нельзя добавить игрока в уже начатую игру."
             )
         if player in self.players:
-            raise PlayerError(f"{ERROR} You've already joined.")
+            raise PlayerError(f"{ERROR} Вы уже в игре.")
         player.activate(self)
         self.players.append(player)
 
@@ -113,11 +113,11 @@ class Game(object):
             self.leave_started(player)
             return
         if player not in self.players:
-            raise PlayerError(f"{ERROR} You're not in game.")
+            raise PlayerError(f"{ERROR} Вы не в игре.")
         if player == self.owner:
             self.stop_game(player)
             raise PlayerError(
-                f"{STOP} Owner has left the game, game is aborted."
+                f"{STOP} Владелец вышел из игры, игра отменена."
             )
         self.players.remove(player)
 
@@ -137,9 +137,9 @@ class Game(object):
                     self.owner = self.get_current_player()
                 return
             else:
-                raise PlayerError(f"{ERROR} You have already left the game.")
+                raise PlayerError(f"{ERROR} Вы уже покинули игру.")
         else:
-            raise PlayerError(f"{ERROR} Cannot leave: no game in progress.")
+            raise PlayerError(f"{ERROR} Невозможно выйти: нет активных игр.")
 
     def has_active_players(self):
         """Check if active players remain in the game"""
@@ -176,27 +176,27 @@ class Game(object):
         """Check if command can be used on any turn"""
         if not self.started:
             raise PlayerError(
-                f"{ERROR} This game is not started (try {START} /start)."
+                f"{ERROR} Эта игра ещё не начата (попробуйте {START} /start)."
             )
         if self.finished:
             raise PlayerError(
-                f"{ERROR} This game is already finished, create a new game "
-                f"(try {START} /start)."
+                f"{ERROR} Эта игра уже окончена, создайте новую игру "
+                f"(попробуйте {START} /start)."
             )
         if player not in self.players:
-            raise PlayerError(f"{ERROR} You're not in game.")
+            raise PlayerError(f"{ERROR} Вы не в игре.")
 
     def chk_command_usable(self, player):
         """Check command can be used on player's turn"""
         self.chk_command_usable_any_turn(player)
         if not self.is_current_turn(player):
-            raise PlayerError(f"{ERROR} It's not your turn.")
+            raise PlayerError(f"{ERROR} Сейчас не ваш ход.")
 
     @is_usable
     def roll(self, _):
         """Roll a dice (initial)"""
         if self.hand:
-            raise PlayerError(f"{ERROR} You've already rolled a hand.")
+            raise PlayerError(f"{ERROR} Вы уже бросили кубики.")
         self.hand = sorted(Dice.roll(5 if not self.maxi else 6))
         self.last_op = time()
         return self.hand
@@ -209,8 +209,8 @@ class Game(object):
         """
         if not self.hand:
             raise PlayerError(
-                f"{ERROR} Cannot get move list - you didn't roll a hand yet "
-                f"(try {ROLL} /roll)."
+                f"{ERROR} Нельзя получить список ходов - вы ещё не бросили "
+                f"кубики (попробуйте {ROLL} /roll)."
             )
         return self.scoreboard.get_score_options(player, self.hand)
 
@@ -219,8 +219,8 @@ class Game(object):
         """Commit a move and record it in scoreboard"""
         if not self.hand:
             raise PlayerError(
-                f"{ERROR} Cannot move - you didn't roll a hand yet "
-                f"(try {ROLL} /roll)."
+                f"{ERROR} Нельзя сделать ход - вы ещё не бросили кубики "
+                f"(попробуйте {ROLL} /roll)."
             )
         score = self.scoreboard.commit_dice_combination(
             player, self.hand, move)
@@ -268,12 +268,12 @@ class Game(object):
         dice_count = 5 if not self.maxi else 6
         if not self.hand:
             raise PlayerError(
-                f"{ERROR} Cannot reroll - you didn't roll a hand yet "
-                f"(try {ROLL} /roll).")
+                f"{ERROR} Невозможно перебросить кубики - вы ещё их не бросили"
+                f"(попробуйте {ROLL} /roll).")
         if len(query) > dice_count or len(query) < 1:
             raise PlayerError(
-                f"{ERROR} You should select from 1 to "
-                f"{dice_count} dice to reroll.")
+                f"{ERROR} Вы должны выбрать от одного до "
+                f"{dice_count} кубика для переброса.")
 
     def dice_validate(self, dice):
         """Check dice for validity"""
@@ -281,8 +281,8 @@ class Game(object):
             if die not in f'12345{"6" if self.maxi else ""}':
                 dicecount = 5 if not self.maxi else 6
                 raise PlayerError(
-                    f"{ERROR} You should specify numbers in "
-                    f"range 1-{dicecount} to reroll."
+                    f"{ERROR} Для переброса вы должны указать цифры в "
+                    f"диапазоне 1-{dicecount}."
                 )
 
     def reroll_increment(self, player):
@@ -293,12 +293,12 @@ class Game(object):
                     self.saved_rerolls[player] -= 1
                 else:
                     raise PlayerError(
-                        f"{ERROR} You cannot reroll more than twice "
-                        f"(no saved rerolls)!"
+                        f"{ERROR} Нельзя перебросить кубики более двух раз "
+                        f"(нет сохранённых перебросов)!"
                     )
             else:
                 raise PlayerError(
-                    f"{ERROR} You cannot reroll more than twice!"
+                    f"{ERROR} Нельзя перебросить кубики более двух раз!"
                 )
         else:
             self.reroll += 1
@@ -338,7 +338,7 @@ class Game(object):
         """Toggle dice in reroll pool"""
         if len(dice) != 1:
             raise PlayerError(
-                f"{ERROR} You should specify a single dice to reroll."
+                f"{ERROR} Вы должны указать один кубик для переброса."
             )
         if dice in self.reroll_pool:
             self.reroll_pool.remove(dice)
@@ -350,11 +350,11 @@ class Game(object):
         """Add dice to reroll pool"""
         if len(dice) != 1:
             raise PlayerError(
-                f"{ERROR} You should specify a single dice to reroll."
+                f"{ERROR} Вы должны указать один кубик для переброса."
             )
         if dice in self.reroll_pool:
             raise PlayerError(
-                f"{ERROR} This dice is already queued for reroll."
+                f"{ERROR} Этот кубик уже в очереди на переброс."
             )
         self.reroll_pool.append(dice)
 
@@ -363,10 +363,10 @@ class Game(object):
         """Remove dice from reroll pool"""
         if len(dice) != 1:
             raise PlayerError(
-                f"{ERROR} You should specify a single dice to reroll."
+                f"{ERROR} Вы должны указать один кубик для переброса."
             )
         if dice not in self.reroll_pool:
-            raise PlayerError(f"{ERROR} This dice is not queued for reroll.")
+            raise PlayerError(f"{ERROR} Этот кубик не в очереди на переброс.")
         self.reroll_pool.remove(dice)
 
     def _decide_turn_order(self):
@@ -383,7 +383,7 @@ class Game(object):
                 roll = Dice.roll_single()
                 rolls.append(roll)
                 current_message.append(
-                    f"{ROLL} {player} rolls {roll.to_emoji()}.\n"
+                    f"{ROLL} {player} выбросил {roll.to_emoji()}.\n"
                 )
             max_dice = max(rolls)
             max_players = []
@@ -397,36 +397,36 @@ class Game(object):
                 return turn_messages
             elif len(players) == 1:  # Last player
                 current_message.append(
-                    f"{LAST} {players[0]} is {turn + 1}"
-                    f"{SUFFIX.get(turn + 1, 'th')} and moves the last."
+                    f"{LAST} {players[0]} {turn + 1}"
+                    f"-й и ходит последним."
                 )
                 new_players.append(players.pop(0))
             else:
                 if turn == 0:
                     current_message.append(
-                        f"{ORDER} Let's decide the turn order.\n\n"
+                        f"{ORDER} Давайте определим порядок хода.\n\n"
                     )
                 else:
                     current_message.append(
-                        f"{ORDER} Let's find out who will be {turn + 1}"
-                        f"{SUFFIX.get(turn + 1, 'th')}.\n\n"
+                        f"{ORDER} Давайте узнаем, кто ходит {turn + 1}"
+                        f"-м.\n\n"
                     )
                 max_roll, max_rollers = roll_and_stats(players)
                 while len(max_rollers) > 1:
                     current_message.append(
-                        f"\n{TIE} {len(max_rollers)} players have rolled "
-                        f"{max_roll.to_emoji()} and tied. An extra roll will "
-                        f"be necessary to decide who will move "
-                        f"{turn + 1}{SUFFIX.get(turn + 1, 'th')}."
+                        f"\n{TIE} {len(max_rollers)} игрока выбросили "
+                        f"{max_roll.to_emoji()}. Нужен дополнительный бросок, "
+                        f"чтобы разбить ничью и решить, кто будет ходить "
+                        f"{turn + 1}-м."
                     )
                     turn_messages.append(''.join(current_message))
                     current_message = []
                     max_roll, max_rollers = roll_and_stats(max_rollers)
                 orderemoji = FIRST if turn == 0 else MIDDLE
                 current_message.append(
-                    f"\n{orderemoji} {max_rollers[0]} has rolled "
-                    f"{max_roll.to_emoji()} and moves "
-                    f"{turn + 1}{SUFFIX.get(turn + 1, 'th')}."
+                    f"\n{orderemoji} {max_rollers[0]} выбросил "
+                    f"{max_roll.to_emoji()} и ходит "
+                    f"{turn + 1}-м."
                 )
                 new_players.append(max_rollers[0])
                 players.remove(max_rollers[0])
@@ -440,14 +440,14 @@ class Game(object):
         """Begin game"""
         if self.finished:
             raise PlayerError(
-                f"{ERROR} This game is already finished (try {START} /start)."
+                f"{ERROR} Эта игра уже окончена (попробуйте {START} /start)."
             )
         if len(self.players) < 1:
             raise PlayerError(
-                f"{ERROR} At least one person should join a game to start."
+                f"{ERROR} Как минимум один игрок должен присоединиться к игре."
             )
         if player != self.owner:
-            raise PlayerError(f"{ERROR} Only owner can do this!")
+            raise PlayerError(f"{ERROR} Только владелец может делать это!")
         turn_order_msgs = self._decide_turn_order()
         self.scoreboard = Scoreboard(
             self.players, self.yahtzee, self.forced, self.maxi)
@@ -460,7 +460,7 @@ class Game(object):
         """Stop game"""
         if (time() - self.last_op) < INACTIVITY_TIMEOUT:
             if not completed and player != self.owner:
-                raise PlayerError(f"{ERROR} Only owner can do this!")
+                raise PlayerError(f"{ERROR} Только владелец может делать это!")
         self.started = False
         self.finished = True
         self.last_op = 0
@@ -473,7 +473,7 @@ class Game(object):
         selfkick = player == kicked_player
         if (time() - self.last_op) < INACTIVITY_TIMEOUT:
             if not selfkick and player != self.owner:
-                raise PlayerError(f"{ERROR} Only owner can do this!")
+                raise PlayerError(f"{ERROR} Только владелец может делать это!")
         self.leave_started(kicked_player)
         self.last_op = time()
         return kicked_player
@@ -481,10 +481,10 @@ class Game(object):
     def get_game_name(self):
         name = []
         if self.forced:
-            name.append("Forced")
+            name.append("Последовательное")
         if self.maxi:
-            name.append("Maxi")
-        name.append("Yahtzee" if self.yahtzee else "Yatzy")
+            name.append("Макси")
+        name.append("Яхтзи" if self.yahtzee else "Йетзи")
         return " ".join(name)
 
     def get_upper_section_bonus_score(self):

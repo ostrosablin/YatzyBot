@@ -34,7 +34,7 @@ class Dice(object):
         else:
             self.value = value
         if self.value not in VALUES:
-            raise InvalidDiceError(f"Invalid dice value: {self.value}")
+            raise InvalidDiceError(f"Неверное значение кубика: {self.value}")
 
     def __str__(self):
         return self.value

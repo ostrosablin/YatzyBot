@@ -99,36 +99,36 @@ SIX = '6'
 # Position emojis
 LOLLIPOP = '🍭'
 POSITIONS = {1: '🥇', 2: '🥈', 3: '🥉'}
-SUFFIX = {1: 'st', 2: 'nd', 3: 'rd'}
+SUFFIX = {1: 'ое', 2: 'ое', 3: 'ье'}
 
 # Valid dice values
 VALUES = (ONE, TWO, THREE, FOUR, FIVE, SIX)
 
 # Mappings of commands to scoreboard boxes and vice versa
 MAP_TURNS = {
-    'on': "Ones",
-    'ac': "Aces",
-    'tw': "Twos",
-    'th': "Threes",
-    'fo': "Fours",
-    'fi': "Fives",
-    'si': "Sixes",
-    'op': "One Pair",
-    'tp': "Two Pairs",
-    '3p': "Three Pairs",
-    'tk': "Three of a Kind",
-    'fk': "Four of a Kind",
-    '5k': "Five of a Kind",
-    'fh': "Full House",
-    'ca': "Castle",
-    'to': "Tower",
-    'ss': "Small Straight",
-    'ls': "Large Straight",
-    'fs': "Full Straight",
-    'ch': "Chance",
-    'ya': "Yatzy",
-    'yh': "Yahtzee",
-    'my': "Maxi Yatzy"
+    'on': "Единицы",
+    'ac': "Тузы",
+    'tw': "Двойки",
+    'th': "Тройки",
+    'fo': "Четвёрки",
+    'fi': "Пятёрки",
+    'si': "Шестёрки",
+    'op': "Одна Пара",
+    'tp': "Две Пары",
+    '3p': "Три Пары",
+    'tk': "3 Одинаковых",
+    'fk': "4 Одинаковых",
+    '5k': "5 Одинаковых",
+    'fh': "Фулл Хаус",
+    'ca': "Замок",
+    'to': "Башня",
+    'ss': "Малый Стрит",
+    'ls': "Большой Стрит",
+    'fs': "Полный Стрит",
+    'ch': "Шанс",
+    'ya': "Йетзи",
+    'yh': "Яхтзи",
+    'my': "Макси Йетзи"
 }
 
 # Generated mappings

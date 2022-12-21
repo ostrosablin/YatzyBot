@@ -101,19 +101,21 @@ def _game_chooser_msg(update):
     msg = ""
     if is_private(update):
         msg = (
-            f"{INFO} NOTE: Solo mode, if you want to play a multiplayer "
-            f"game with friends, add me to some group and use "
-            f"{START} /start command there.\n\n"
+            f"{INFO} ПРИМЕЧАНИЕ: Соло-режим, если вы хотите сыграть игру с "
+            f"друзьями, добавьте меня в какую-то группу и используйте команду "
+            f"{START} /start чтобы создать многопользовательскую игру.\n\n"
         )
     reply = (
-        f"Hello! {HELLO} I'm Yatzy/Yahtzee bot. To see the help, use "
-        f"{HELP} /help command.\n\nLet's get started, eh?\n\n{msg}"
-        f"Please, choose a game you want to play:\n\n"
-        f"{START} /startyatzy - Start Yatzy game.\n\n"
-        f"{START} /startyahtzee - Start Yahtzee game.\n\n"
-        f"{START} /startforcedyatzy - Start Forced Yatzy game.\n\n"
-        f"{START} /startmaxiyatzy - Start Maxi Yatzy game.\n\n"
-        f"{START} /startforcedmaxiyatzy - Start Forced Maxi Yatzy game."
+        f"Здравствуйте! {HELLO} Я - бот для игры в Йетзи и Яхтзи. Чтобы "
+        f"почитать справку, используйте команду {HELP} /help .\n\n"
+        f"Ну, что ж, давайте приступим?\n\n{msg}"
+        f"Пожалуйста, выберите игру, в которую вы хотите сыграть:\n\n"
+        f"{START} /startyatzy - Начать игру Йетзи.\n\n"
+        f"{START} /startyahtzee - Начать игру Яхтзи.\n\n"
+        f"{START} /startforcedyatzy - Начать игру Последовательное Йетзи.\n\n"
+        f"{START} /startmaxiyatzy - Начать игру Макси Йетзи.\n\n"
+        f"{START} /startforcedmaxiyatzy - Начать игру Последовательное Макси "
+        f"Йетзи."
     )
     answer(update, reply)
 
@@ -122,43 +124,46 @@ def _game_start_msg(update, turn_order_messages):
     for msg in turn_order_messages:
         answer(update, msg)
     msg = (
-        f"{START} Game begins! Roll dice with {ROLL} /roll command."
-        f"\n\nTo stop the game, use {STOP} /stop command.\n\n"
-        f"Current turn: "
+        f"{START} Игра началась! Чтобы бросить кубики, используйте команду "
+        f"{ROLL} /roll .\n\nЧтобы остановить игру, используйте команду "
+        f"{STOP} /stop .\n\n"
+        f"Сейчас ходит: "
         f"{gamemanager.current_turn(update.message.chat)}"
     )
     answer(update, msg)
 
 
 def start(_, update):
-    logger.info(f"Start attempt - chat_id {update.message.chat.id}")
+    logger.info(f"Попытка начать игру - chat_id {update.message.chat.id}")
     game = get_game(update)
     if not gamemanager.is_game_created(update.message.chat) or game.finished:
         _game_chooser_msg(update)
     elif not gamemanager.is_game_running(update.message.chat):
         try:
             turn_order_msgs = game.start_game(get_player(update))
-            logger.info(f"Game started - chat_id {update.message.chat.id}")
+            logger.info(f"Игра начата - chat_id {update.message.chat.id}")
             _game_start_msg(update, turn_order_msgs)
         except PlayerError as e:
             answer(update, str(e))
     else:
-        answer(update, f"{ERROR} Game is already started.")
+        answer(update, f"{ERROR} Игра уже начата.")
 
 
 def _game_created_msg(update, player, gamename):
     if is_private(update):
         msg = (
-            f"{CONGRATS} Success! You've created and joined a new solo "
-            f"{gamename} game!\n\nRoll dice with {ROLL} /roll command.\n\n"
-            f"To stop the game, use {STOP} /stop command."
+            f"{CONGRATS} Успешно! Вы создали и подключились к новой одиночной "
+            f"игре {gamename}!\n\nЧтобы бросить кубики, используйте команду "
+            f"{ROLL} /roll .\n\n"
+            f"Чтобы остановить игру, используйте команду {STOP} /stop ."
         )
     else:
         msg = (
-            f"{CONGRATS} Success! You've created and joined a new {gamename}"
-            f" game!\n\nOthers can join using {JOIN} /join command.\n\n"
-            f"When all set - use {START} /start to begin.\n\n"
-            f"{OWNER} Game owner: {player}"
+            f"{CONGRATS} Успешно! Вы создали и подключились к новой игре "
+            f"{gamename}!\n\nДругие могут подключиться с помощью команды "
+            f"{JOIN} /join .\n\nКогда все будут готовы, используйте команду "
+            f"{START} /start чтобы начать игру.\n\n"
+            f"{OWNER} Владелец игры: {player}"
         )
     answer(update, msg)
 
@@ -166,14 +171,14 @@ def _game_created_msg(update, player, gamename):
 def startgame(_, update, yahtzee, forced=False, maxi=False):
     player = get_player(update)
     if yahtzee:
-        gamename = "Yahtzee"
+        gamename = "Яхтзи"
     else:
         gamename = []
         if forced:
-            gamename.append("Forced")
+            gamename.append("Последовательное")
         if maxi:
-            gamename.append("Maxi")
-        gamename.append("Yatzy")
+            gamename.append("Макси")
+        gamename.append("Йетзи")
         gamename = ' '.join(gamename)
     try:
         gamemanager.new_game(
@@ -190,7 +195,7 @@ def startgame(_, update, yahtzee, forced=False, maxi=False):
         answer(update, str(e))
         return
     logger.info(
-        f"{player} has created a new {gamename} game"
+        f"{player} создал новую игру {gamename}"
         f" - chat_id {update.message.chat.id}"
     )
     _game_created_msg(update, player, gamename)
@@ -220,12 +225,15 @@ def chk_game_runs(func):
     @wraps(func)
     def wrapper(_, update):
         if not gamemanager.is_game_created(update.message.chat):
-            answer(update, f"{ERROR} Game doesn't exist (try {START} /start).")
+            answer(
+                update,
+                f"{ERROR} Игра не существует (попробуйте {START} /start)."
+            )
             return
         if not gamemanager.is_game_running(update.message.chat):
             answer(
                 update,
-                f"{ERROR} Game is not running (try {START} /start)."
+                f"{ERROR} Игра не начата (попробуйте {START} /start)."
             )
             return
         func(_, update)
@@ -242,8 +250,8 @@ def is_private(update):
 def stop(_, update):
     try:
         get_game(update).stop_game(get_player(update))
-        logger.info(f"Stopped game - chat_id {update.message.chat.id}")
-        answer(update, f"{STOP} Current game has been stopped.\n\n")
+        logger.info(f"Игра остановлена - chat_id {update.message.chat.id}")
+        answer(update, f"{STOP} Текущая игра была остановлена.\n\n")
     except PlayerError as e:
         answer(update, str(e))
 
@@ -251,12 +259,12 @@ def stop(_, update):
 def owner_transfer_msg(update, oldowner, newowner):
     if oldowner != newowner:
         logger.info(
-            f"Owner {oldowner} left the game, new owner is"
+            f"Владелец {oldowner} покинул игру, новый владелец:"
             f" {newowner} - chat_id {update.message.chat.id}"
         )
         answer(
-            update, f"{OWNER} Owner {oldowner} has left the game. "
-                    f"Ownership is transferred to player {newowner}."
+            update, f"{OWNER} Владелец {oldowner} покинул игру. "
+                    f"Права владельца переданы игроку {newowner}."
         )
 
 
@@ -267,17 +275,17 @@ def kick(_, update):
         kicker = get_player(update)
         oldowner = game.owner
         kicked = game.kick_player(kicker)
-        kicked_msg = f"{kicker} has kicked {kicked} from the game"
+        kicked_msg = f"{kicker} выгнал {kicked} из игры"
         if kicker == kicked:
-            kicked_msg = f"{kicker} kicks self from the game"
+            kicked_msg = f"{kicker} выгнал сам себя из игры"
         logger.info(f"{kicked_msg} - chat_id {update.message.chat.id}")
         answer(update, f"{KICK} {kicked_msg}.\n\n")
         owner_transfer_msg(update, oldowner, game.owner)
         if game.finished and not game.has_active_players():
             logger.info(
-                f"Game stopped (abandoned) - chat_id {update.message.chat.id}"
+                f"Игру покинули все игроки - chat_id {update.message.chat.id}"
             )
-            answer(update, f"{STOP} Last player kicked. Game is over.")
+            answer(update, f"{STOP} Последний игрок выгнан. Игра окончена.")
         score_messages(update, kicked, game.finished)
         if game.finished:
             return
@@ -290,13 +298,16 @@ def roster_check(func):
     @wraps(func)
     def wrapper(_, update):
         if not gamemanager.is_game_created(update.message.chat):
-            answer(update, f"{ERROR} Game doesn't exist (try {START} /start).")
+            answer(
+                update,
+                f"{ERROR} Игра не существует (попробуйте {START} /start)."
+            )
             return
         if get_game(update).finished:
             answer(
                 update,
-                f"{ERROR} This game is already finished, create a new game "
-                f"(try {START} /start)."
+                f"{ERROR} Эта игра уже окончена, создайте новую игру "
+                f"(попробуйте {START} /start)."
             )
             return
         func(_, update)
@@ -309,21 +320,23 @@ def join(_, update):
     try:
         get_game(update).add_player(player)
         logger.info(
-            f"{player} has joined a game - chat_id {update.message.chat.id}"
+            f"{player} подключился к игре - chat_id {update.message.chat.id}"
         )
     except PlayerError as e:
         answer(update, str(e))
         return
     answer(
         update,
-        f"{JOIN} {player} has joined the game!\n\n"
-        f"{LEAVE} /leave - Leave the game lobby.\n\n"
-        f"NOTE: You can also use /leave later to leave a game in progress. "
-        f"This will forfeit your remaining turns and any remaining unfilled "
-        f"scoreboard boxes will be filled with zeros. However, you will still "
-        f"be listed in game totals with your last score.\n\n"
-        f"Owner can also {KICK} /kick player, whose turn is it now "
-        f"(e.g. to get rid of idling player, who blocks the game progress)."
+        f"{JOIN} {player} подключился к игре!\n\n"
+        f"{LEAVE} /leave - Покинуть лобби игры.\n\n"
+        f"ПРИМЕЧАНИЕ: Вы можете также использовать команду /leave во время "
+        f"игры, чтобы покинуть уже начатую игру. Это аннулирует все "
+        f"оставшиеся ходы и все незаполненные строчки таблицы очков будут "
+        f"заполнены нулями. Однако, вы всё равно останетесь в списке игроков "
+        f"со счётом, который был у вас на момент выхода из игры.\n\n"
+        f"Владелец также может выгонять командой {KICK} /kick игрока, чей ход "
+        f"идёт сейчас (например, чтобы избавиться от игрока, который "
+        f"бездействует и мешает игровому процессу)."
     )
 
 
@@ -337,9 +350,9 @@ def leave(_, update):
         oldowner = game.owner
         if not is_lobby:
             turn = game.get_current_player()
-        lobby = " lobby" if is_lobby else ""
+        lobby = "лобби игры" if is_lobby else "игру"
         logger.info(
-            f"{player} has left a game{lobby}"
+            f"{player} покинул {lobby}"
             f" - chat_id {update.message.chat.id}"
         )
         game.del_player(player)
@@ -347,13 +360,13 @@ def leave(_, update):
     except PlayerError as e:
         answer(update, str(e))
         return
-    answer(update, f"{LEAVE} {player} has left the game{lobby}!")
+    answer(update, f"{LEAVE} {player} покинул {lobby}!")
     owner_transfer_msg(update, oldowner, game.owner)
     if game.finished and not game.has_active_players():
         logger.info(
-            f"Game stopped (abandoned) - chat_id {update.message.chat.id}"
+            f"Игру покинули все игроки - chat_id {update.message.chat.id}"
         )
-        answer(update, f"{STOP} Last player has left the game. Game is over.")
+        answer(update, f"{STOP} Последний игрок вышел из игры. Игра окончена.")
     if not is_lobby:
         score_messages(update, player, game.finished)
         if not switch_turn:
@@ -376,7 +389,7 @@ def mk_movelink(options):
             fetchnext = False
         if options[option] < best_value:
             break
-        if option == "Chance":
+        if option == "Шанс":
             fetchnext = True
             target = best_list_tail
         else:
@@ -384,12 +397,13 @@ def mk_movelink(options):
         best_length += 1
         target.append(
             f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
-            f"{option} - {options[option]} points.\n\n"
+            f"{option} - {options[option]} очков.\n\n"
         )
     if len(options) != best_length:
-        movelink.append(f"{MOVE} /move to choose a move.\n\n")
+        movelink.append(f"{MOVE} /move - выбрать ход.\n\n")
         movelink.append(
-            f"\n{BEST} Best move{'' if best_length == 1 else 's'}:\n\n"
+            f"\n{BEST} {'Лучший ход' if best_length == 1 else 'Лучшие ходы'}"
+            f":\n\n"
         )
         best_list_tail.append('\n')
     movelink.extend(best_list)
@@ -398,8 +412,8 @@ def mk_movelink(options):
 
 
 def roll_msg(update, game, player, dice):
-    rerolllink = f"{ROLL} /reroll to choose dice for reroll.\n\n" \
-                 f"{ROLL} /qr <positions> to do a quick reroll.\n\n"
+    rerolllink = f"{ROLL} /reroll - выбрать кубики для переброса.\n\n" \
+                 f"{ROLL} /qr <позиции> - для быстрого переброса.\n\n"
     if game.reroll > 1:
         if game.maxi:
             if not game.saved_rerolls[player]:
@@ -413,12 +427,13 @@ def roll_msg(update, game, player, dice):
     automove = ""
     if not rerolllink:
         if len(options) == 1:
-            movelink = f"{INFO} You have no rerolls left and only one valid" \
-                       f" move, finishing turn automatically.\n\n"
+            movelink = f"{INFO} У вас не осталось перебросов и есть только " \
+                       f" один допустимый ход, автоматически завершаем " \
+                       f"ход.\n\n"
             automove = MAP_COMMANDS[next(iter(options))]
     answer(
         update,
-        f"{ROLL} {player} has rolled (Reroll {rollnumber}/2):\n\n"
+        f"{ROLL} {player} выбросил (Переброс {rollnumber}/2):\n\n"
         f"{' '.join([d.to_emoji() for d in dice])}\n\n"
         f"{rerolllink}{movelink}{saved}"
     )
@@ -442,27 +457,28 @@ def reroll_msg(update, game, player, dice):
     saved = get_extra_rerolls(game, player)
     sixth = ""
     if game.maxi:
-        sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
+        sixth = f"{dice[5].to_emoji()} " \
+                f"/6 - Переключить переброс 6-ого кубика.\n\n"
     rollnumber = game.reroll
     movelink = mk_movelink(game.get_hand_score_options(player))
     msg = (
-        f"{ROLL} Reroll menu (Reroll {rollnumber}/2):\n\n"
+        f"{ROLL} Меню переброса (Переброс {rollnumber}/2):\n\n"
         f"{dice_to_wildcard(game)}\n\n"
-        f"{RESET_REROLL} /rr - Reset reroll (deselect all).\n\n"
-        f"{dice[0].to_emoji()} /1 - Toggle reroll first dice.\n\n"
-        f"{dice[1].to_emoji()} /2 - Toggle reroll second dice.\n\n"
-        f"{dice[2].to_emoji()} /3 - Toggle reroll third dice.\n\n"
-        f"{dice[3].to_emoji()} /4 - Toggle reroll fourth dice.\n\n"
-        f"{dice[4].to_emoji()} /5 - Toggle reroll fifth dice.\n\n"
-        f"{sixth}{SELECT_ALL} /sa - Select all.\n\n"
-        f"{DO_REROLL} /dr - Do reroll.\n\n"
+        f"{RESET_REROLL} /rr - Снять переброс всех кубиков.\n\n"
+        f"{dice[0].to_emoji()} /1 - Переключить переброс 1-ого кубика.\n\n"
+        f"{dice[1].to_emoji()} /2 - Переключить переброс 2-ого кубика.\n\n"
+        f"{dice[2].to_emoji()} /3 - Переключить переброс 3-ого кубика.\n\n"
+        f"{dice[3].to_emoji()} /4 - Переключить переброс 4-ого кубика.\n\n"
+        f"{dice[4].to_emoji()} /5 - Переключить переброс 5-ого кубика.\n\n"
+        f"{sixth}{SELECT_ALL} /sa - Выбрать все кубики для переброса.\n\n"
+        f"{DO_REROLL} /dr - Перебросить отмеченные кубики.\n\n"
         f"{movelink}{saved}"
     )
     if game.reroll > 1:
         if not saved:  # We don't have saved Maxi Yatzy turns
             msg = (
-                f"{ERROR} You have already rerolled twice.\n\n"
-                f"Use {MOVE} /move command to finish your move."
+                f"{ERROR} Вы уже перебросили кубики дважды.\n\n"
+                f"Используйте команду {MOVE} /move чтобы завершить ход."
             )
     answer(update, msg)
 
@@ -475,8 +491,8 @@ def reroll(_, update):
         game.chk_command_usable(player)
         if not game.hand:
             raise PlayerError(
-                f"{ERROR} Cannot reroll - you didn't roll a hand yet "
-                f"(try {ROLL} /roll)."
+                f"{ERROR} Невозможно перебросить кубики - вы ещё не сделали "
+                f"первый бросок (попробуйте {ROLL} /roll)."
             )
     except PlayerError as e:
         answer(update, str(e))
@@ -491,17 +507,18 @@ def send_dice(update, game):
 
 def explain_quick_reroll():
     raise PlayerError(
-        f"{ERROR} This is a quick reroll command: it requires "
-        f"arguments and cannot be used without any like that. "
-        f"You should pass positions of dice to reroll.\n\n"
-        f"To reroll specific dice (e.g. first three), just "
-        f"type their positions, like that:\n\n"
+        f"{ERROR} Это команда быстрого переброса: она требует аргументов и "
+        f"не может использоваться просто так, без них. Вы должны написать "
+        f"после команды позиции кубиков для переброса.\n\n"
+        f"Чтобы перебросить определённые кубики (например, первые три), "
+        f"просто наберите их позиции, например:\n\n"
         f"/qr 123\n\n"
-        f"To reroll all dice, any of these commands will work:"
-        f"\n\n/qr a\n/qr all\n/qr -\n/qr *\n\n"
-        f"If you wish to hold particular dice (e.g. keep last "
-        f"two), and reroll others, any of these will work:"
-        f"\n\n/qr h45\n/qr !45"
+        f"Чтобы перебросить все кубики сразу, можно использовать любую из "
+        f"команд ниже:\n\n/qr a\n/qr all\n/qr -\n/qr *\n\n"
+        f"Если вы хотите наоборот оставить определённые кубики (например, "
+        f"последние два), и перебросить остальные - можно использовать любую "
+        f"из команд ниже:"
+        f"\n\n/qr !45\n/qr h45"
     )
 
 
@@ -509,21 +526,21 @@ def quick_reroll_set(game, command):
     if not command:
         explain_quick_reroll()
     allowed = f"12345{'6' if game.maxi else ''}"
-    if "a" in command or "-" in command or "*" in command:
+    if "a" in command or "-" in command or "*" in command or "а" in command:
         command = allowed
     for digit in allowed:
         if command.count(digit) > 1:
             raise PlayerError(
-                f"{ERROR} Duplicate digits were found in quick reroll"
-                f" command. This likely indicates a typo. Please"
-                f" check your input and try again."
+                f"{ERROR} В команде быстрого переброса найдены дублирующиеся "
+                f"цифры. Скорее всего, это говорит об опечатке. Проверьте "
+                f"введённую команду и попробуйте ещё раз."
             )
     for char in command:
         if char not in allowed and char not in " \t\nh!":
             raise PlayerError(
-                f"{ERROR} Illegal characters were found in quick reroll"
-                f" command. This might be a typo. Please check your"
-                f" input and try again."
+                f"{ERROR} В команде быстрого переброса найдены недопустимые "
+                f"символы. Скорее всего, это говорит об опечатке. Проверьте "
+                f"введённую команду и попробуйте ещё раз."
             )
     if "h" in command or "!" in command:
         inverse = list(allowed)
@@ -550,8 +567,8 @@ def reroll_process(_, update):
         game.chk_command_usable(player)
         if not game.hand:
             raise PlayerError(
-                f"{ERROR} Cannot reroll - you didn't roll a hand yet "
-                f"(try {ROLL} /roll)."
+                f"{ERROR} Невозможно перебросить кубики - вы ещё не сделали "
+                f"первый бросок (попробуйте {ROLL} /roll)."
             )
         if arg in ['1', '2', '3', '4', '5', '6']:
             # 6 only for Maxi games
@@ -574,7 +591,7 @@ def reroll_process(_, update):
                 dice = game.reroll_pooled(player)
             roll_msg(update, game, player, dice)
         else:
-            answer(update, f"{ERROR} Invalid reroll action.")
+            answer(update, f"{ERROR} Неверное действие переброса.")
     except PlayerError as e:
         answer(update, str(e))
         return
@@ -593,13 +610,13 @@ def commit(_, update):
     for option in options:
         output.append(
             f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
-            f"{option} - {options[option]} points."
+            f"{option} - {options[option]} очков."
         )
     if game.reroll < 2 or (game.maxi and game.saved_rerolls[player]):
-        output.append(f"{ROLL} /reroll - to choose dice for reroll.")
-        output.append(f"{ROLL} /qr <positions> - to do a quick reroll.\n\n")
+        output.append(f"{ROLL} /reroll - выбрать кубики для переброса.")
+        output.append(f"{ROLL} /qr <позиции> - для быстрого переброса.\n\n")
     table = '\n\n'.join(output)
-    answer(update, f"{MOVE} Your scoring options:\n\n{table}")
+    answer(update, f"{MOVE} Возможные варианты хода:\n\n{table}")
 
 
 def get_extra_rerolls(game, player):
@@ -607,7 +624,7 @@ def get_extra_rerolls(game, player):
     if game.maxi:
         extra = game.saved_rerolls[player]
         if extra:
-            saved = f"{INFO} You have {extra} extra saved reroll(s).\n\n"
+            saved = f"{INFO} Сохранённые перебросы: {extra}.\n\n"
     return saved
 
 
@@ -617,12 +634,12 @@ def current_turn_msg(update):
     saved = get_extra_rerolls(game, player)
     answer(
         update,
-        f"{INFO} Current turn: "
+        f"{INFO} Сейчас ходит: "
         f"{player}\n\n"
-        f"Use {ROLL} /roll to roll dice.\n\n"
-        f"Use {SCORE} /score to view your scoreboard.\n\n"
-        f"Use {SCORE} /score_all to view everyone's scoreboards.\n\n"
-        f"Use {SCORE_ALL} /score_total to view everyone's total score.\n\n"
+        f"Use {ROLL} /roll - бросить кубики.\n\n"
+        f"Use {SCORE} /score - посмотреть вашу таблицу очков.\n\n"
+        f"Use {SCORE} /score_all - посмотреть таблицы очков всех игроков.\n\n"
+        f"Use {SCORE_ALL} /score_total - посмотреть общий счёт.\n\n"
         f"{saved}"
     )
 
@@ -630,11 +647,11 @@ def current_turn_msg(update):
 def move_msg(update, saved_rerolls, player, move, points):
     acquired_extra = ""
     if saved_rerolls:
-        acquired_extra = f"{INFO} Saved +{saved_rerolls} extra reroll(s)"
+        acquired_extra = f"{INFO} +{saved_rerolls} переброс(а) сохранено"
     answer(
         update,
-        f"{SCORED} {player} scores {MOVE_ICONS[move]} {MAP_TURNS[move]}"
-        f" for {points} points.\n\n"
+        f"{SCORED} {player} делает ход {MOVE_ICONS[move]} {MAP_TURNS[move]}"
+        f" за {points} очков.\n\n"
         f"{acquired_extra}"
     )
 
@@ -675,7 +692,7 @@ def scoreboard_msg(update, player):
             scores = game.scores_player(plr)
             answer(
                 update,
-                f"{SCORE} Scoreboard for {plr}:\n\n`{scores}`",
+                f"{SCORE} Таблица очков для {plr}:\n\n`{scores}`",
                 parse_mode=ParseMode.MARKDOWN
             )
     except PlayerError as e:
@@ -695,12 +712,12 @@ def score(_, update):
 def totalscore_msg(update, finished=False):
     player = get_player(update)
     emoji = SCORE_ALL
-    msg = "Current total scores"
+    msg = "Текущий общий счёт"
     if finished:
         emoji = CONGRATS
-        msg = "The game has ended! Final scores"
+        msg = "Игра окончена! Финальный счёт"
         logger.info(
-            f"The game is completed - chat_id {update.message.chat.id}"
+            f"Игра окончена - chat_id {update.message.chat.id}"
         )
     try:
         scores = get_game(update).scores_final(player)
@@ -721,140 +738,187 @@ def score_all(_, update):
 
 
 def bot_help(_, update):
-    logger.info("Help invoked")
+    logger.info("Вызвана справка")
     game = get_game(update)
     if not gamemanager.is_game_created(update.message.chat) or game.finished:
         answer(
             update,
-            f"{HELP} Use {START} /start command to begin and follow the "
-            f"instructions.\n\nYou can read on Yatzy and Yahtzee rules here:\n"
+            f"{HELP} Используйте команду {START} /start чтобы начать работу "
+            f"с ботом и следуйте инструкциям. Вы можете почитать об играх "
+            f"Йетзи и Яхтзи (покере на костях) тут:\n"
+            f"https://ru.wikipedia.org/wiki/Покер_на_костях\n\n"
+            f"Или в англоязычных статьях:\n"
             f"https://en.wikipedia.org/wiki/Yatzy\n"
             f"https://en.wikipedia.org/wiki/Yahtzee\n\n"
-            f"Use {HELP} /help command again during a game to see help for "
-            f"current game variation."
+            f"Используйте команду {HELP} /help после начала игры, чтобы "
+            f"увидеть справку по текущему варианту игры."
         )
     else:
         avg_dice = 3 + (1 if game.maxi else 0) - (1 if game.forced else 0)
-        avg_dice_words = {2: "two", 3: "three", 4: "four"}
-        msg = [f"{HELP} {game.get_game_name()} rules.\n"]
+        avg_dice_words = {2: "два", 3: "три", 4: "четыре"}
+        msg = [f"{HELP} Правила для игры {game.get_game_name()}.\n"]
         if game.forced:
-            msg.append(f"{INFO} Forced rule: In this variant you must "
-                       f"score combinations in exactly same sequence as "
-                       f"listed in scoreboard, i.e. starting with Ones, then "
-                       f"Twos and so on. Due to added difficulty, requirement "
-                       f"for upper section bonus is reduced to "
-                       f"{game.get_upper_section_bonus_score()}.\n")
-        msg.append(f"{UPPER} Upper section:\n")
+            msg.append(f"{INFO} Правило последовательных ходов: В этом "
+                       f"варианте вы должны делать ходы точно в том же "
+                       f"порядке, в котором они указаны в таблице очков, т.е. "
+                       f"начиная с Единиц, потом Двойки и так далее. "
+                       f"Поскольку это добавляет сложности, требование по "
+                       f"количеству очков для получения бонуса верхней секции "
+                       f"уменьшено до "
+                       f"{game.get_upper_section_bonus_score()} очков.\n")
+        dice_count = "шесть" if game.maxi else "пять"
+        rolls_remark = ""
+        if game.maxi:
+            rolls_remark = " (не считая сохранённых перебросов)"
+        rounds = "пятнадцать"
         if game.yahtzee:
-            msg.append(f"{MOVE_ICONS['ac']} Aces: Any combination. Score is "
-                       f"sum of dice showing the number 1.")
+            rounds = "тринадцать"
+        elif game.maxi:
+            rounds = "двадцать"
+        msg.append(f"Цель игры состоит в том, чтобы набирать очки, бросая "
+                   f"{dice_count} кубиков и собирая из них разные комбинации."
+                   f"Кубики можно бросать до трёх раз за ход{rolls_remark} "
+                   f"чтобы попытаться составить различные комбинации, дающие "
+                   f"очки. После первого броска, игрок может оставить любые "
+                   f"кубики и перебросить все остальные. Игра состоит из "
+                   f"{rounds} раундов. После каждого раунда, игрок должен "
+                   f"выбрать категорию таблицы очков, которая будет "
+                   f"использована для этого раунда (даже если она даст ноль "
+                   f"очков). После того, как категория была использована, она "
+                   f"не может быть использована повторно. Разные категории "
+                   f"дают разное количество очков. Некоторые дают "
+                   f"фиксированное количество очков, а другие зависят от "
+                   f"значений на кубиках. Игрок, набравший наибольшее "
+                   f"количество очков становится победителем в игре. Ниже "
+                   f"приведены описания категорий таблицы очков.\n")
+        msg.append(f"{UPPER} Верхняя секция:\n")
+        if game.yahtzee:
+            msg.append(f"{MOVE_ICONS['ac']} Тузы: Любая комбинация. "
+                       f"Количество очков равно сумме кубиков с цифрой 1.")
         else:
-            msg.append(f"{MOVE_ICONS['on']} Ones: Any combination. Score is "
-                       f"sum of dice showing the number 1.")
-        msg.append(f"{MOVE_ICONS['tw']} Twos: Any combination. Score is sum "
-                   f"of dice showing the number 2.")
-        msg.append(f"{MOVE_ICONS['th']} Threes: Any combination. Score is sum "
-                   f"of dice showing the number 3.")
-        msg.append(f"{MOVE_ICONS['fo']} Fours: Any combination. Score is sum "
-                   f"of dice showing the number 4.")
-        msg.append(f"{MOVE_ICONS['fi']} Fives: Any combination. Score is sum "
-                   f"of dice showing the number 5.")
-        msg.append(f"{MOVE_ICONS['si']} Sixes: Any combination. Score is sum "
-                   f"of dice showing the number 6.\n")
-        msg.append(f"{SCORED} Upper section bonus: If you manage to score "
-                   f"at least {game.get_upper_section_bonus_score()} points "
-                   f"(an average of {avg_dice_words[avg_dice]} in each box) "
-                   f"in the upper section, you are awarded a bonus of "
-                   f"{game.get_upper_section_bonus_value()} points.\n")
-        msg.append(f"{LOWER} Lower section:\n")
+            msg.append(f"{MOVE_ICONS['on']} Единицы: Любая комбинация. "
+                       f"Количество очков равно сумме кубиков с цифрой 1.")
+        msg.append(f"{MOVE_ICONS['tw']} Двойки: Любая комбинация. "
+                   f"Количество очков равно сумме кубиков с цифрой 2.")
+        msg.append(f"{MOVE_ICONS['th']} Тройки: Любая комбинация. "
+                   f"Количество очков равно сумме кубиков с цифрой 3.")
+        msg.append(f"{MOVE_ICONS['fo']} Четвёрки: Любая комбинация. "
+                   f"Количество очков равно сумме кубиков с цифрой 4.")
+        msg.append(f"{MOVE_ICONS['fi']} Пятёрки: Любая комбинация. "
+                   f"Количество очков равно сумме кубиков с цифрой 5.")
+        msg.append(f"{MOVE_ICONS['si']} Шестёрки: Любая комбинация. "
+                   f"Количество очков равно сумме кубиков с цифрой 6.\n")
+        msg.append(f"{SCORED} Бонус верхней секции: Если вы наберёте хотя бы "
+                   f"{game.get_upper_section_bonus_score()} очков "
+                   f"(в среднем {avg_dice_words[avg_dice]} кубика в каждой "
+                   f"категории) в верхней секции, вы получите бонус в "
+                   f"{game.get_upper_section_bonus_value()} очков.\n")
+        msg.append(f"{LOWER} Нижняя секция:\n")
         if not game.yahtzee:
-            msg.append(f"{MOVE_ICONS['op']} One Pair: Two dice showing the "
-                       f"same number (if there's more than one pair, highest "
-                       f"one is chosen). Score is sum of those two dice.")
+            msg.append(f"{MOVE_ICONS['op']} Одна Пара: Два кубика с "
+                       f"одинаковой цифрой (если есть несколько пар - "
+                       f"считается наибольшая). Количество очков равно сумме "
+                       f"этих двух кубиков.")
             if game.maxi:
-                maxi_pair_remark = " (if there's more than two pairs, " \
-                                   "highest two are chosen)"
+                maxi_pair_remark = " (если есть три пары - считаются две " \
+                                   "наибольшие)"
             else:
                 maxi_pair_remark = ""
-            msg.append(f"{MOVE_ICONS['tp']} Two Pairs: Two different pairs "
-                       f"of dice{maxi_pair_remark}. Score is sum of dice in "
-                       f"those two pairs.")
+            msg.append(f"{MOVE_ICONS['tp']} Две Пары: Две разные пары "
+                       f"кубиков{maxi_pair_remark}. Количество очков равно "
+                       f"сумме кубиков в этих трёх парах.")
             if game.maxi:
-                msg.append(f"{MOVE_ICONS['3p']} Three Pairs: Three different "
-                           f"pairs of dice. Score is sum of all dice.")
-        msg.append(f"{MOVE_ICONS['tk']} Three of a Kind: Three dice showing "
-                   f"same number. Score is sum of "
-                   f"{'all dice' if game.yahtzee else 'those three dice'}.")
-        msg.append(f"{MOVE_ICONS['fk']} Four of a Kind: Four dice showing "
-                   f"same number. Score is sum of "
-                   f"{'all dice' if game.yahtzee else 'those four dice'}.")
+                msg.append(f"{MOVE_ICONS['3p']} Три Пары: Три разные пары "
+                           f"кубиков. Количество очков равно сумме всех "
+                           f"кубиков.")
+        msg.append(
+            f"{MOVE_ICONS['tk']} 3 Одинаковых: Три кубика с одинаковой "
+            f"цифрой. Количество очков равно сумме "
+            f"{'всех кубиков' if game.yahtzee else 'этих трёх кубиков'}."
+        )
+        msg.append(
+            f"{MOVE_ICONS['fk']} 4 Одинаковых: Четыре кубика с одинаковой "
+            f"цифрой. Количество очков равно сумме "
+            f"{'всех кубиков' if game.yahtzee else 'этих четырёх кубиков'}."
+        )
         if game.maxi:
-            msg.append(f"{MOVE_ICONS['5k']} Five of a Kind: Five dice showing "
-                       f"same number. Score is sum of those five dice.")
-        msg.append(f"{MOVE_ICONS['fh']} Full House: A set of three dice of "
-                   f"one number and two dice of different number. Score is "
-                   f"{'25 points' if game.yahtzee else 'sum of all dice'}.")
+            msg.append(f"{MOVE_ICONS['5k']} 5 Одинаковых: Пять кубиков с "
+                       f"одинаковой цифрой. Количество очков равно сумме этих "
+                       f"пяти кубиков.")
+        fh_points = 'сумма всех кубиков'
+        if game.yahtzee:
+            fh_points = '25'
+        elif game.maxi:
+            fh_points = 'сумма этих пяти кубиков'
+        msg.append(f"{MOVE_ICONS['fh']} Фулл Хаус: Комбинация из трёх кубиков "
+                   f"с одной цифрой и пары кубиков с другой цифрой. "
+                   f"Количество очков - {fh_points}.")
         if game.maxi:
-            msg.append(f"{MOVE_ICONS['ca']} Castle: Two different sets of "
-                       f"three dice showing same number. Score is sum of all "
-                       f"dice.")
-            msg.append(f"{MOVE_ICONS['to']} Tower: A set of four dice of one "
-                       f"number and two dice of different number. Score is "
-                       f"sum of all dice.")
+            msg.append(f"{MOVE_ICONS['ca']} Замок: Два разных комплекта из "
+                       f"трёх одинаковых кубиков. Количество очков равно "
+                       f"сумме всех кубиков.")
+            msg.append(f"{MOVE_ICONS['to']} Башня: Комбинация из четырёх "
+                       f"кубиков с одной цифрой и пары кубиков с другой "
+                       f"цифрой. Количество очков равно сумме всех кубиков.")
         if game.yahtzee:
-            msg.append(f"{MOVE_ICONS['ss']} Small Straight: Any set of four "
-                       f"sequential dice (e.g. 1-2-3-4, 2-3-4-5 or 3-4-5-6). "
-                       f"Score is 30 points.")
-            msg.append(f"{MOVE_ICONS['ls']} Large Straight: Any set of five "
-                       f"sequential dice (e.g. 1-2-3-4-5 or 2-3-4-5-6). Score "
-                       f"is 40 points.")
+            msg.append(f"{MOVE_ICONS['ss']} Малый Стрит: Любые четыре кубика, "
+                       f"идущие подряд (т.е. 1-2-3-4, 2-3-4-5 или 3-4-5-6). "
+                       f"Количество очков - 30.")
+            msg.append(f"{MOVE_ICONS['ls']} Большой Стрит: Любые пять "
+                       f"кубиков, идущие подряд (т.е. 1-2-3-4-5 or "
+                       f"2-3-4-5-6). Количество очков - 40.")
         else:
-            msg.append(f"{MOVE_ICONS['ss']} Small Straight: The combination "
-                       f"1-2-3-4-5. Score is 15 points (sum of all dice).")
-            msg.append(f"{MOVE_ICONS['ls']} Large Straight: The combination "
-                       f"2-3-4-5-6. Score is 20 points (sum of all dice).")
+            st_points = 'сумма всех кубиков'
             if game.maxi:
-                msg.append(f"{MOVE_ICONS['fs']} Full Straight: The "
-                           f"combination 1-2-3-4-5-6. Score is 21 points "
-                           f"(sum of all dice).")
-        msg.append(f"{MOVE_ICONS['ch']} Chance: Any combination. Score is sum "
-                   f"of all dice.")
+                st_points = 'сумма этих пяти кубиков'
+            msg.append(f"{MOVE_ICONS['ss']} Малый Стрит: Комбинация "
+                       f"1-2-3-4-5. Количество очков - 15 ({st_points}).")
+            msg.append(f"{MOVE_ICONS['ls']} Большой Стрит: Комбинация "
+                       f"2-3-4-5-6. Количество очков - 20 ({st_points}).")
+            if game.maxi:
+                msg.append(f"{MOVE_ICONS['fs']} Полный Стрит: Комбинация "
+                           f"1-2-3-4-5-6. Количество очков - 21 (сумма всех "
+                           f"кубиков).")
+        msg.append(f"{MOVE_ICONS['ch']} Шанс: Любая комбинация. Количество"
+                   f"очков равно сумме всех кубиков.")
         if game.yahtzee:
-            msg.append(f"{MOVE_ICONS['yh']} Yahtzee: All five dice showing "
-                       f"the same number. Score is 50 points.\n")
+            msg.append(f"{MOVE_ICONS['yh']} Яхтзи: Одинаковая цифра на всех "
+                       f"пяти кубиках. Количество очков - 50.\n")
         else:
             if game.maxi:
-                msg.append(f"{MOVE_ICONS['my']} Maxi Yatzy: All six dice "
-                           f"showing the same number. Score is 100 points.\n")
+                msg.append(f"{MOVE_ICONS['my']} Макси Йетзи: Одинаковая цифра "
+                           f"на всех шести кубиках. Количество очков - 100.\n")
             else:
-                msg.append(f"{MOVE_ICONS['ya']} Yatzy: All five dice showing "
-                           f"the same number. Score is 50 points.\n")
+                msg.append(f"{MOVE_ICONS['ya']} Йетзи: Одинаковая цифра на "
+                           f"всех пяти кубиках. Количество очков - 50.\n")
         if game.maxi:
-            msg.append(f"{INFO} Turn saving mechanics: You can save unused "
-                       f"rerolls (e.g. if you move right after initial roll "
-                       f"or after first reroll) and use them during future "
-                       f"turns.\n")
+            msg.append(f"{INFO} Механика сохранения перебросов: Вы можете "
+                       f"сохранять неиспользованные перебросы (например, если "
+                       f"вы сделаете ход после первого броска или одного "
+                       f"переброса) и использовать их в последующие ходы.\n")
         if game.yahtzee:
-            msg.append(f"{SCORED} Yahtzee Bonus: If you roll more than one "
-                       f"Yahtzee during a game and have Yahtzee box filled "
-                       f"with 50 points, you are awarded a bonus of "
-                       f"100 points for second and any subsequent Yahtzees.\n")
-            msg.append(f"{JOKER} Joker Rule: If you are awarded a "
-                       f"Yahtzee Bonus, you can score your hand as a Joker "
-                       f"under following rules:\n\n{MOVE_ICONS['ac']} If the "
-                       f"corresponding Upper Section box is unused then that "
-                       f"category must be used.\n{MOVE_ICONS['tw']} If the "
-                       f"corresponding Upper Section box has been used "
-                       f"already, a Lower Section box must be used. The "
-                       f"Yahtzee acts as a Joker so that the Full House, "
-                       f"Small Straight and Large Straight categories can be "
-                       f"used to score 25, 30 or 40 points (respectively), "
-                       f"even though the dice do not meet the normal "
-                       f"requirement for those categories.\n"
-                       f"{MOVE_ICONS['th']} If the corresponding Upper "
-                       f"Section box and all Lower Section boxes have been "
-                       f"used, an unused Upper Section box must be used, "
-                       f"scoring 0 points.\n")
+            msg.append(f"{SCORED} Бонус Яхтзи: Если вы соберёте более одного "
+                       f"Яхтзи за игру и уже заполнили категорию Яхтзи на 50 "
+                       f"очков - вы получаете дополнительный бонус в 100 "
+                       f"очков за второй и все последующие Яхтзи.\n")
+            msg.append(f"{JOKER} Правило Джокера: Если вы получили Бонус "
+                       f"Яхтзи, вы можете использовать вашу комбинацию как "
+                       f"джокер по следующим правилам:\n\n{MOVE_ICONS['ac']} "
+                       f"Если соответствующая категория Верхней Секции "
+                       f"свободна - вы должны использовать её.\n"
+                       f"{MOVE_ICONS['tw']} Если соответствующая категория "
+                       f"Верхней Секции уже использована, вы должны "
+                       f"использовать любую категорию Нижней Секции. Яхтзи "
+                       f"работает как Джокер, так что Фулл Хаус, Малый Стрит "
+                       f"и Большой Стрит могут быть использованы, чтобы "
+                       f"получить 25, 30 или 40 очков (соответственно), "
+                       f"несмотря на то, что кубики не соответствуют обычным "
+                       f"требованиям для этих категорий.\n{MOVE_ICONS['th']} "
+                       f"Если соответствующая категория Верхней Секции и все "
+                       f"категории Нижней Секции уже использованы, любая "
+                       f"свободная категория Верхней Секции должна быть "
+                       f"использована. В таком случае вы получаете 0 очков за "
+                       f"комбинацию.\n")
         answer(
             update,
             "\n".join(msg)
@@ -863,7 +927,7 @@ def bot_help(_, update):
 
 def error(_, update, err):
     """Log Errors caused by Updates."""
-    logger.error('Update "%s" caused error "%s"', update, err)
+    logger.error('Событие "%s" вызвало ошибку "%s"', update, err)
 
 
 class MQBot(bot.Bot):
@@ -944,12 +1008,12 @@ def main():
     # Start the Bot
     updater.start_polling()
 
-    logger.info("YatzyBot has started.")
+    logger.info("YatzyBot запущен.")
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT
     updater.idle()
 
-    logger.info("Shutting down the bot...")
+    logger.info("Завершаем работу бота...")
     yatzybot.__del__()  # Force thread stop to allow process termination.
 
 

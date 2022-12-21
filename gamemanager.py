@@ -35,7 +35,9 @@ class GameManager(object):
         if self.is_game_running(chat) or self.is_game_not_started(chat):
             if self.chats[chat.id].owner != self.player(owner):
                 if (time() - INACTIVITY_TIMEOUT) < self.chats[chat.id].last_op:
-                    raise PlayerError(f"{ERROR} Only owner can do that!")
+                    raise PlayerError(
+                        f"{ERROR} Только владелец может делать это!"
+                    )
         self.chats[chat.id] = Game(
             chat.id, self.player(owner), yahtzee, forced, maxi)
 

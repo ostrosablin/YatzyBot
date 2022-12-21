@@ -42,7 +42,9 @@ class Scoreboard(object):
     def __init__(self, players, yahtzee=False, forced=False, maxi=False):
         if (maxi or forced) and yahtzee:
             raise ValueError(
-                "Error, Maxi and Forced mode is valid only for Yatzy game!")
+                "Ошибка, Макси и Последовательный режимы допустимы только для "
+                "игры Йетзи!"
+            )
         self.players = players  # List of players
         # If True - we play Yahtzee (strict commercial rules)
         self.yahtzee = yahtzee
@@ -52,53 +54,53 @@ class Scoreboard(object):
         for player in self.players:
             boxes = [
                 Box(
-                    "Aces" if yahtzee else "Ones",
+                    "Тузы" if yahtzee else "Единицы",
                     lambda dice: Box.sum_particular_digits(dice, 1),
                     lambda dice: 0
                 ),
                 Box(
-                    "Twos", lambda dice: Box.sum_particular_digits(dice, 2),
+                    "Двойки", lambda dice: Box.sum_particular_digits(dice, 2),
                     lambda dice: 0
                 ),
                 Box(
-                    "Threes", lambda dice: Box.sum_particular_digits(dice, 3),
+                    "Тройки", lambda dice: Box.sum_particular_digits(dice, 3),
                     lambda dice: 0
                 ),
                 Box(
-                    "Fours", lambda dice: Box.sum_particular_digits(dice, 4),
+                    "Четвёрки", lambda dice: Box.sum_particular_digits(dice, 4),
                     lambda dice: 0
                 ),
                 Box(
-                    "Fives", lambda dice: Box.sum_particular_digits(dice, 5),
+                    "Пятёрки", lambda dice: Box.sum_particular_digits(dice, 5),
                     lambda dice: 0
                 ),
                 Box(
-                    "Sixes", lambda dice: Box.sum_particular_digits(dice, 6),
+                    "Шестёрки", lambda dice: Box.sum_particular_digits(dice, 6),
                     lambda dice: 0
                 ),
-                Box("Up. Sect. Total", None, None, 0),
-                Box("Up. Sect. Bonus", None, None, 0)]
+                Box("Сумма Вер. Секц.", None, None, 0),
+                Box("Бонус Вер. Секц.", None, None, 0)]
             if not yahtzee:
                 boxes.append(
-                    Box("One Pair", lambda dice: Box.groups(dice, [2])))
+                    Box("Одна Пара", lambda dice: Box.groups(dice, [2])))
                 boxes.append(
-                    Box("Two Pairs", lambda dice: Box.groups(dice, [2, 2])))
+                    Box("Две Пары", lambda dice: Box.groups(dice, [2, 2])))
                 if self.maxi:
                     boxes.append(
                         Box(
-                            "Three Pairs",
+                            "Три Пары",
                             lambda dice: Box.groups(dice, [2, 2, 2])
                         )
                     )
             boxes.append(
                 Box(
-                    "Three of a Kind",
+                    "3 Одинаковых",
                     lambda dice: Box.sum_n_of_a_kind(dice, 3, yahtzee),
                     Box.chance)
             )
             boxes.append(
                 Box(
-                    "Four of a Kind",
+                    "4 Одинаковых",
                     lambda dice: Box.sum_n_of_a_kind(dice, 4, yahtzee),
                     Box.chance
                 )
@@ -106,28 +108,28 @@ class Scoreboard(object):
             if self.maxi:
                 boxes.append(
                     Box(
-                        "Five of a Kind",
+                        "5 Одинаковых",
                         lambda dice: Box.sum_n_of_a_kind(dice, 5, yahtzee)
                     )
                 )
-            boxes.append(Box("Full House", lambda dice: Box.full_house(
+            boxes.append(Box("Фулл Хаус", lambda dice: Box.full_house(
                 dice, yahtzee), lambda dice: 25))
             if self.maxi:
                 boxes.append(
-                    Box("Castle", lambda dice: Box.groups(dice, [3, 3])))
+                    Box("Замок", lambda dice: Box.groups(dice, [3, 3])))
                 boxes.append(
-                    Box("Tower", lambda dice: Box.groups(dice, [2, 4])))
+                    Box("Башня", lambda dice: Box.groups(dice, [2, 4])))
             if yahtzee:
                 boxes.append(
                     Box(
-                        "Small Straight",
+                        "Малый Стрит",
                         lambda dice: Box.straight_yahtzee(dice, 4),
                         lambda dice: 30
                     )
                 )
                 boxes.append(
                     Box(
-                        "Large Straight",
+                        "Большой Стрит",
                         lambda dice: Box.straight_yahtzee(dice, 5),
                         lambda dice: 40
                     )
@@ -135,33 +137,33 @@ class Scoreboard(object):
             else:
                 boxes.append(
                     Box(
-                        "Small Straight",
+                        "Малый Стрит",
                         lambda dice: Box.straight_yatzy(dice, 1, 5)
                     )
                 )
                 boxes.append(
                     Box(
-                        "Large Straight",
+                        "Большой Стрит",
                         lambda dice: Box.straight_yatzy(dice, 2, 6)
                     )
                 )
                 if self.maxi:
                     boxes.append(
                         Box(
-                            "Full Straight",
+                            "Полный Стрит",
                             lambda dice: Box.straight_yatzy(dice, 1, 6)
                         )
                     )
-            boxes.append(Box("Chance", Box.chance))
+            boxes.append(Box("Шанс", Box.chance))
             if self.yahtzee:
-                boxes.append(Box("Yahtzee", Box.yatzy))
+                boxes.append(Box("Яхтзи", Box.yatzy))
             else:
-                boxes.append(Box("Maxi Yatzy" if self.maxi else "Yatzy",
+                boxes.append(Box("Макси Йетзи" if self.maxi else "Йетзи",
                                  lambda dice: Box.yatzy(dice, self.maxi)))
             if yahtzee:
-                boxes.append(Box("Yahtzee Bonus", None, None, 0))
-            boxes.append(Box("Low. Sect. Total", None, None, 0))
-            boxes.append(Box("Grand Total", None, None, 0))
+                boxes.append(Box("Бонус Яхтзи", None, None, 0))
+            boxes.append(Box("Сумма Ниж. Секц.", None, None, 0))
+            boxes.append(Box("Общая Сумма", None, None, 0))
             self.scores[player] = OrderedDict(
                 [(box.name, box) for box in boxes])
 
@@ -170,11 +172,11 @@ class Scoreboard(object):
         # Yahtzee Bonus
         if self.yahtzee:
             # If we have already scored a Yahtzee
-            if self.scores[player].get("Yahtzee").score:
+            if self.scores[player].get("Яхтзи").score:
                 # And if we're scored another valid Yahtzee
-                if self.scores[player]["Yahtzee"].preview_dice(dice):
+                if self.scores[player]["Яхтзи"].preview_dice(dice):
                     # Add 100 extra points to Yahtzee Bonus
-                    self.scores[player]["Yahtzee Bonus"].score += 100
+                    self.scores[player]["Бонус Яхтзи"].score += 100
                     return 100
         return 0
 
@@ -195,12 +197,12 @@ class Scoreboard(object):
         """Check if Upper Section Bonus is to be awarded and give it"""
         upper_section_bonus = self.get_upper_section_bonus_score()
         if self.scores[player].get(
-                "Up. Sect. Total").score >= upper_section_bonus:
+                "Сумма Вер. Секц.").score >= upper_section_bonus:
             # And if we didn't score the bonus yet
-            if not self.scores[player].get("Up. Sect. Bonus").score:
+            if not self.scores[player].get("Бонус Вер. Секц.").score:
                 # Add 50 extra points to Upper Section Bonus (35 for Yahtzee)
                 bonus = self.get_upper_section_bonus_value()
-                self.scores[player]["Up. Sect. Bonus"].set_score(bonus)
+                self.scores[player]["Бонус Вер. Секц."].set_score(bonus)
                 return bonus
         return 0
 
@@ -240,17 +242,17 @@ class Scoreboard(object):
         total = 0
         for box in list(self.scores[player].values())[:6]:
             total += box.score if box.score is not None else 0
-        self.scores[player]["Up. Sect. Total"].set_score(total)
+        self.scores[player]["Сумма Вер. Секц."].set_score(total)
         # Compute and award upper section bonus
         bonus = self.award_upper_section_bonus(player)
         # Keep upper score to compute lower subtotal
-        upper = total + self.scores[player].get("Up. Sect. Bonus").score
+        upper = total + self.scores[player].get("Бонус Вер. Секц.").score
         # Proceed to compute totals
         for box in list(self.scores[player].values())[7:-2]:
             total += box.score if box.score is not None else 0
         # Compute lower section subtotal
-        self.scores[player]["Low. Sect. Total"].set_score(total - upper)
-        self.scores[player]["Grand Total"].set_score(total)
+        self.scores[player]["Сумма Ниж. Секц."].set_score(total - upper)
+        self.scores[player]["Общая Сумма"].set_score(total)
         return bonus
 
     def get_score_options(self, player, dice):
@@ -258,9 +260,9 @@ class Scoreboard(object):
         # Special Yahtzee rules
         if self.yahtzee:
             # If we have already scored a Yahtzee with >0
-            if self.scores[player]["Yahtzee"].score:
+            if self.scores[player]["Яхтзи"].score:
                 # And if we're scored another valid Yahtzee
-                if self.scores[player]["Yahtzee"].preview_dice(dice):
+                if self.scores[player]["Яхтзи"].preview_dice(dice):
                     # Try to get a corresponding upper section box:
                     box = list(self.scores[player].values())[int(dice[0]) - 1]
                     if box.score is None:
@@ -298,16 +300,14 @@ class Scoreboard(object):
         """Commit dice combination"""
         options = self.get_score_options(player, dice)
         if boxname not in options:
-            raise IllegalMoveError(
-                f"{ERROR} This move is not allowed in this situation."
-            )
+            raise IllegalMoveError(f"{ERROR} Этот ход сейчас недопустим.")
         score = 0
         # Special Yahtzee rules
         if self.yahtzee:
             # If we have already scored a Yahtzee with >0
-            if self.scores[player]["Yahtzee"].score:
+            if self.scores[player]["Яхтзи"].score:
                 # And if we're scored another valid Yahtzee
-                if self.scores[player]["Yahtzee"].preview_dice(dice):
+                if self.scores[player]["Яхтзи"].preview_dice(dice):
                     # Award a Yahtzee Bonus
                     score += self.award_yahtzee_bonus(player, dice)
                     # Try to get a corresponding upper section box:
@@ -344,12 +344,12 @@ class Scoreboard(object):
         """Print scoreboard for particular player"""
         output = [["", player.user.username or player.user.first_name]]
         up_sec_bonus = self.get_upper_section_bonus_score()
-        up_sec_total = self.scores[player].get("Up. Sect. Total").score
+        up_sec_total = self.scores[player].get("Сумма Вер. Секц.").score
         remaining = max(up_sec_bonus - up_sec_total, 0)
         bonus_value = self.get_upper_section_bonus_value()
         lost = not self.check_upper_section_bonus_achievable(player)
         for box in self.scores[player].values():
-            if box.name == "Up. Sect. Total":
+            if box.name == "Сумма Вер. Секц.":
                 delta_msg = ""
                 if not lost and remaining:
                     delta = self.calculate_expected_delta(player)
@@ -360,14 +360,14 @@ class Scoreboard(object):
                 output.append(
                     [box.name, "" if box.score is None else str(box.score)]
                 )
-            if box.name == "Up. Sect. Bonus":
-                bonus = "Awarded"
+            if box.name == "Бонус Вер. Секц.":
+                bonus = "Получен"
                 if lost:
-                    bonus = "Missed"
+                    bonus = "Упущен"
                 elif remaining:
-                    bonus = f"{remaining} more"
+                    bonus = f"ещё {remaining} очков"
                 output.append(
-                    [f"{bonus_value} pts. if ≥ {up_sec_bonus}", bonus]
+                    [f"{bonus_value} очк. за ≥ {up_sec_bonus}", bonus]
                 )
                 output.append(["", ""])
         return tabulate(output, tablefmt="simple")
@@ -389,7 +389,7 @@ class Scoreboard(object):
         """Get final scoring"""
         scores = []
         for player in self.players:
-            scores.append((player, self.scores[player]['Grand Total'].score))
+            scores.append((player, self.scores[player]['Общая Сумма'].score))
         return OrderedDict(sorted(scores, reverse=True, key=lambda x: x[1]))
 
     def print_final_scores(self):
@@ -408,9 +408,9 @@ class Scoreboard(object):
                 if scores[player] == min_score:
                     placeemoji = LOLLIPOP
             output.append(
-                f"{placeemoji} {place}"
-                f"{SUFFIX.get(place, 'th')} place - "
-                f"{player} ({scores[player]} points)"
+                f"{placeemoji} {place}-"
+                f"{SUFFIX.get(place, 'ое')} место - "
+                f"{player} ({scores[player]} очков)"
             )
             place += 1
             last_score = scores[player]
