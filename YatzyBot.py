@@ -744,6 +744,30 @@ def bot_help(_, update):
                        f"Twos and so on. Due to added difficulty, requirement "
                        f"for upper section bonus is reduced to "
                        f"{game.get_upper_section_bonus_score()}.\n")
+        dice_count = "six" if game.maxi else "five"
+        rolls_remark = ""
+        if game.maxi:
+            rolls_remark = " (not counting saved rerolls)"
+        rounds = "fifteen"
+        if game.yahtzee:
+            rounds = "thirteen"
+        elif game.maxi:
+            rounds = "twenty"
+        msg.append(f"The objective of the game is to score points by rolling "
+                   f"{dice_count} dice to make certain combinations. The dice "
+                   f"can be rolled up to three times in a turn{rolls_remark} "
+                   f"to try to make various scoring combinations. After first "
+                   f"roll, player can keep any dice they want, and reroll "
+                   f"others. The game consists of {rounds} rounds. After each "
+                   f"round, the player must choose which scoring category is "
+                   f"to be used for that round (even if it's scores for zero "
+                   f"points). Once a category has been used in the game, it "
+                   f"cannot be used again. The scoring categories have "
+                   f"varying point values, some of which are fixed values and "
+                   f"others for which the score depends on the value of the "
+                   f"dice. The player who scores the most points is winner of "
+                   f"the game. You can find scoring categories descriptions "
+                   f"below.\n")
         msg.append(f"{UPPER} Upper section:\n")
         if game.yahtzee:
             msg.append(f"{MOVE_ICONS['ac']} Aces: Any combination. Score is "
@@ -838,7 +862,7 @@ def bot_help(_, update):
                 msg.append(f"{MOVE_ICONS['ya']} Yatzy: All five dice showing "
                            f"the same number. Score is 50 points.\n")
         if game.maxi:
-            msg.append(f"{INFO} Turn saving mechanics: You can save unused "
+            msg.append(f"{INFO} Reroll saving mechanics: You can save unused "
                        f"rerolls (e.g. if you move right after initial roll "
                        f"or after first reroll) and use them during future "
                        f"turns.\n")
