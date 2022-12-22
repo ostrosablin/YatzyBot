@@ -1,16 +1,16 @@
 # YatzyBot
-A Telegram bot to play Yatzy and Yahtzee (multiplayer)
+Телеграм-бот для многопользовательской игры в Яхтзи и Йетзи 
 
-Features:
-* Complete support of Yatzy and Yahtzee rules.
-* Also supports Forced Yatzy, Maxi Yatzy and Forced Maxi Yatzy rule variants.
-* Multiplayer group bot, allowing to play a game with friends.
-* Completely clickable controls style, can be played from both PC or smartphone comfortably, no typing necessary.
+Особенности:
+* Полная поддержка правил Яхтзи и Йетзи.
+* Так же поддерживаются варианты Последовательное Йетзи, Макси Йетзи и Последовательное Макси Йетзи.
+* Групповой бот для многопользовательской игры, можно играть с друзьями.
+* Полностью кликабельное управление. Не требуется печатать, можно играть комфортно как на компьютере, так и на смартфоне.
 
-To use the bot, clone the repo, install the dependencies, fill creds.py with your token and connection settings (proxy, etc) and run YatzyBot.py (Python 3).
+Чтобы использовать этого бота, склонируйте репозиторий, установите все зависимости, добавьте в creds.py свой токен и настройки подключения (например, прокси и т.д.) и запустите YatzyBot.py (поддерживается только Python 3).
 
-To play with a bot, add it to some group, then issue /start command. From there, you can select a game variant to play. Follow the instructions afterwards.
+Для того, чтобы сыграть, добавьте бота в любую группу и наберите команду /start. Дальше можно будет выбрать вариант игры. Далее следуйте инструкциям бота.
 
-Special thanks go to Lik for a fancy avatar for bot, his continued help with beta testing and new ideas.
+Особая благодарность Lik'у за классный аватар для бота и его активную помощь с тестированием бота и новые идеи для него.
 
-Official copy of this bot runs as @YahtzeeYatzyBot in Telegram.
+Официальная копия этого бота в Telegram работает под именем @RuYahtzeeYatzyBot .
