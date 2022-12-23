@@ -53,6 +53,7 @@ from const import (
     LOWER,
     JOKER,
     BEST,
+    RULES,
 )
 from creds import TOKEN, REQUEST_KWARGS
 from error import IllegalMoveError, PlayerError
@@ -756,21 +757,21 @@ def bot_help(_, update):
             rounds = "thirteen"
         elif game.maxi:
             rounds = "twenty"
-        msg.append(f"The objective of the game is to score points by rolling "
-                   f"{dice_count} dice to make certain combinations. The dice "
-                   f"can be rolled up to three times in a turn{rolls_remark} "
-                   f"to try to make various scoring combinations. After first "
-                   f"roll, player can keep any dice they want, and reroll "
-                   f"others. The game consists of {rounds} rounds. After each "
-                   f"round, the player must choose which scoring category is "
-                   f"to be used for that round (even if it's scores for zero "
-                   f"points). Once a category has been used in the game, it "
-                   f"cannot be used again. The scoring categories have "
-                   f"varying point values, some of which are fixed values and "
-                   f"others for which the score depends on the value of the "
-                   f"dice. The player who scores the most points is winner of "
-                   f"the game. You can find scoring categories descriptions "
-                   f"below.\n")
+        msg.append(f"{RULES} The objective of the game is to score points by "
+                   f"rolling {dice_count} dice to make certain combinations. "
+                   f"The dice can be rolled up to three times in a "
+                   f"turn{rolls_remark} to try to make various scoring "
+                   f"combinations. After first roll, player can keep any dice "
+                   f"they want, and reroll others. The game consists of "
+                   f"{rounds} rounds. After each round, the player must "
+                   f"choose which scoring category is to be used for that "
+                   f"round (even if it's scores for zero points). Once a "
+                   f"category has been used in the game, it cannot be used "
+                   f"again. The scoring categories have varying point values, "
+                   f"some of which are fixed values and others for which the "
+                   f"score depends on the value of the dice. The player who "
+                   f"scores the most points is winner of the game. You can "
+                   f"find scoring categories descriptions below.\n")
         msg.append(f"{UPPER} Upper section:\n")
         if game.yahtzee:
             msg.append(f"{MOVE_ICONS['ac']} Aces: Any combination. Score is "
