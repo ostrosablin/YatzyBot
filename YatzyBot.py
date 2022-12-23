@@ -460,8 +460,11 @@ def reroll_msg(update, game, player, dice):
     )
     if game.reroll > 1:
         if not saved:  # We don't have saved Maxi Yatzy turns
+            maxi_remark = ""
+            if game.maxi:
+                maxi_remark = " (no saved rerolls)"
             msg = (
-                f"{ERROR} You have already rerolled twice.\n\n"
+                f"{ERROR} You have already rerolled twice{maxi_remark}.\n\n"
                 f"Use {MOVE} /move command to finish your move."
             )
     answer(update, msg)
