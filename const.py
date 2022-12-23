@@ -50,6 +50,7 @@ UPPER = "🔼"
 LOWER = "🔽"
 JOKER = "🃏"
 BEST = "📈"
+RULES = "📖"
 
 # Move icons
 MOVE_ICONS = {
