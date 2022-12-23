@@ -362,7 +362,7 @@ def leave(_, update):
         current_turn_msg(update)
 
 
-def mk_movelink(options):
+def mk_movelink(options, compact=False):
     movelink = []
     best_value = None
     best_length = 0
@@ -377,7 +377,7 @@ def mk_movelink(options):
             fetchnext = False
         if options[option] < best_value:
             break
-        if option == "Chance":
+        if not best_length and option == "Chance":
             fetchnext = True
             target = best_list_tail
         else:
@@ -389,12 +389,14 @@ def mk_movelink(options):
         )
     if len(options) != best_length:
         movelink.append(f"{MOVE} /move to choose a move.\n\n")
-        movelink.append(
-            f"\n{BEST} Best move{'' if best_length == 1 else 's'}:\n\n"
-        )
-        best_list_tail.append('\n')
-    movelink.extend(best_list)
-    movelink.extend(best_list_tail)
+        if not compact:
+            movelink.append(
+                f"\n{BEST} Best move{'' if best_length == 1 else 's'}:\n\n"
+            )
+            best_list_tail.append('\n')
+    if not compact or len(options) == best_length:
+        movelink.extend(best_list)
+        movelink.extend(best_list_tail)
     return "".join(movelink)
 
 
@@ -445,7 +447,7 @@ def reroll_msg(update, game, player, dice):
     if game.maxi:
         sixth = f"{dice[5].to_emoji()} /6 - Toggle reroll sixth dice.\n\n"
     rollnumber = game.reroll
-    movelink = mk_movelink(game.get_hand_score_options(player))
+    movelink = mk_movelink(game.get_hand_score_options(player), compact=True)
     msg = (
         f"{ROLL} Reroll menu (Reroll {rollnumber}/2):\n\n"
         f"{dice_to_wildcard(game)}\n\n"
