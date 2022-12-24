@@ -119,12 +119,13 @@ def _game_chooser_msg(update):
     answer(update, reply)
 
 
-def _game_start_msg(update, turn_order_messages):
+def _game_start_msg(update, turn_order_messages, game):
     for msg in turn_order_messages:
         answer(update, msg)
     msg = (
-        f"{START} Game begins! Roll dice with {ROLL} /roll command."
-        f"\n\nTo stop the game, use {STOP} /stop command.\n\n"
+        f"{START} Game begins! Roll dice with {ROLL} /roll command.\n\n"
+        f"To see help for {game.get_name()}, use {HELP} /help command.\n\n" 
+        f"To stop the game, use {STOP} /stop command.\n\n"
         f"Current turn: "
         f"{gamemanager.current_turn(update.message.chat)}"
     )
@@ -140,7 +141,7 @@ def start(_, update):
         try:
             turn_order_msgs = game.start_game(get_player(update))
             logger.info(f"Game started - chat_id {update.message.chat.id}")
-            _game_start_msg(update, turn_order_msgs)
+            _game_start_msg(update, turn_order_msgs, game)
         except PlayerError as e:
             answer(update, str(e))
     else:
@@ -152,6 +153,7 @@ def _game_created_msg(update, player, gamename):
         msg = (
             f"{CONGRATS} Success! You've created and joined a new solo "
             f"{gamename} game!\n\nRoll dice with {ROLL} /roll command.\n\n"
+            f"To see help for this game variant, use {HELP} /help command.\n\n"
             f"To stop the game, use {STOP} /stop command."
         )
     else:
@@ -629,6 +631,7 @@ def current_turn_msg(update):
         f"Use {SCORE} /score to view your scoreboard.\n\n"
         f"Use {SCORE} /score_all to view everyone's scoreboards.\n\n"
         f"Use {SCORE_ALL} /score_total to view everyone's total score.\n\n"
+        f"Use {HELP} /help to see help for this game variant.\n\n" 
         f"{saved}"
     )
 
@@ -742,7 +745,7 @@ def bot_help(_, update):
     else:
         avg_dice = 3 + (1 if game.maxi else 0) - (1 if game.forced else 0)
         avg_dice_words = {2: "two", 3: "three", 4: "four"}
-        msg = [f"{HELP} {game.get_game_name()} rules.\n"]
+        msg = [f"{HELP} {game.get_name()} rules.\n"]
         if game.forced:
             msg.append(f"{INFO} Forced rule: In this variant you must "
                        f"score combinations in exactly same sequence as "

@@ -478,7 +478,7 @@ class Game(object):
         self.last_op = time()
         return kicked_player
 
-    def get_game_name(self):
+    def get_name(self):
         name = []
         if self.forced:
             name.append("Forced")
