@@ -815,8 +815,12 @@ def bot_help(_, update):
             if game.maxi:
                 msg.append(f"{MOVE_ICONS['3p']} Three Pairs: Three different "
                            f"pairs of dice. Score is sum of all dice.")
+        maxi_tk_remark = ""
+        if game.maxi:
+            maxi_tk_remark = " (if there's more than one Three of a Kind, " \
+                               "highest one is chosen)"
         msg.append(f"{MOVE_ICONS['tk']} Three of a Kind: Three dice showing "
-                   f"same number. Score is sum of "
+                   f"same number{maxi_tk_remark}. Score is sum of "
                    f"{'all dice' if game.yahtzee else 'those three dice'}.")
         msg.append(f"{MOVE_ICONS['fk']} Four of a Kind: Four dice showing "
                    f"same number. Score is sum of "
