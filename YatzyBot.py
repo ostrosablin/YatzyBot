@@ -109,7 +109,7 @@ def _game_chooser_msg(update):
         )
     reply = (
         f"Здравствуйте! {HELLO} Я - бот для игры в Йетзи и Яхтзи. Чтобы "
-        f"почитать справку, используйте команду {HELP} /help .\n\n"
+        f"почитать справку, используйте команду {HELP} /help.\n\n"
         f"Ну, что ж, давайте приступим?\n\n{msg}"
         f"Пожалуйста, выберите игру, в которую вы хотите сыграть:\n\n"
         f"{START} /startyatzy - Начать игру Йетзи.\n\n"
@@ -122,13 +122,14 @@ def _game_chooser_msg(update):
     answer(update, reply)
 
 
-def _game_start_msg(update, turn_order_messages):
+def _game_start_msg(update, turn_order_messages, game):
     for msg in turn_order_messages:
         answer(update, msg)
     msg = (
-        f"{START} Игра началась! Чтобы бросить кубики, используйте команду "
-        f"{ROLL} /roll .\n\nЧтобы остановить игру, используйте команду "
-        f"{STOP} /stop .\n\n"
+        f"{START} Игра началась!\n\n"
+        f"{ROLL} /roll - бросить кубики.\n\n"
+        f"{HELP} /help - правила варианта {game.get_name()}.\n\n"
+        f"{STOP} /stop - остановить игру.\n\n"
         f"Сейчас ходит: "
         f"{gamemanager.current_turn(update.message.chat)}"
     )
@@ -144,7 +145,7 @@ def start(_, update):
         try:
             turn_order_msgs = game.start_game(get_player(update))
             logger.info(f"Игра начата - chat_id {update.message.chat.id}")
-            _game_start_msg(update, turn_order_msgs)
+            _game_start_msg(update, turn_order_msgs, game)
         except PlayerError as e:
             answer(update, str(e))
     else:
@@ -155,15 +156,16 @@ def _game_created_msg(update, player, gamename):
     if is_private(update):
         msg = (
             f"{CONGRATS} Успешно! Вы создали и подключились к новой одиночной "
-            f"игре {gamename}!\n\nЧтобы бросить кубики, используйте команду "
-            f"{ROLL} /roll .\n\n"
-            f"Чтобы остановить игру, используйте команду {STOP} /stop ."
+            f"игре {gamename}!\n\n"
+            f"{ROLL} /roll - бросить кубики.\n\n"
+            f"{HELP} /help - правила для этого варианта игры.\n\n"
+            f"{STOP} /stop - остановить игру."
         )
     else:
         msg = (
             f"{CONGRATS} Успешно! Вы создали и подключились к новой игре "
             f"{gamename}!\n\nДругие могут подключиться с помощью команды "
-            f"{JOIN} /join .\n\nКогда все будут готовы, используйте команду "
+            f"{JOIN} /join.\n\nКогда все будут готовы, используйте команду "
             f"{START} /start чтобы начать игру.\n\n"
             f"{OWNER} Владелец игры: {player}"
         )
@@ -643,10 +645,11 @@ def current_turn_msg(update):
         update,
         f"{INFO} Сейчас ходит: "
         f"{player}\n\n"
-        f"Use {ROLL} /roll - бросить кубики.\n\n"
-        f"Use {SCORE} /score - посмотреть вашу таблицу очков.\n\n"
-        f"Use {SCORE} /score_all - посмотреть таблицы очков всех игроков.\n\n"
-        f"Use {SCORE_ALL} /score_total - посмотреть таблицу рейтинга.\n\n"
+        f"{ROLL} /roll - бросить кубики.\n\n"
+        f"{SCORE} /score - посмотреть вашу таблицу очков.\n\n"
+        f"{SCORE} /score_all - посмотреть таблицы очков всех игроков.\n\n"
+        f"{SCORE_ALL} /score_total - посмотреть таблицу рейтинга.\n\n"
+        f"{HELP} /help - правила для этого варианта игры.\n\n" 
         f"{saved}"
     )
 
@@ -758,12 +761,12 @@ def bot_help(_, update):
             f"https://en.wikipedia.org/wiki/Yatzy\n"
             f"https://en.wikipedia.org/wiki/Yahtzee\n\n"
             f"Используйте команду {HELP} /help после начала игры, чтобы "
-            f"увидеть справку по текущему варианту игры."
+            f"почитать правила текущего варианта игры."
         )
     else:
         avg_dice = 3 + (1 if game.maxi else 0) - (1 if game.forced else 0)
         avg_dice_words = {2: "два", 3: "три", 4: "четыре"}
-        msg = [f"{HELP} Правила для игры {game.get_game_name()}.\n"]
+        msg = [f"{HELP} Правила для игры {game.get_name()}.\n"]
         if game.forced:
             msg.append(f"{INFO} Правило последовательных ходов: В этом "
                        f"варианте вы должны делать ходы точно в том же "
