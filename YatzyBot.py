@@ -886,7 +886,7 @@ def bot_help(_, update):
                 msg.append(f"{MOVE_ICONS['fs']} Полный Стрит: Комбинация "
                            f"1-2-3-4-5-6. Количество очков - 21 (сумма всех "
                            f"кубиков).")
-        msg.append(f"{MOVE_ICONS['ch']} Шанс: Любая комбинация. Количество"
+        msg.append(f"{MOVE_ICONS['ch']} Шанс: Любая комбинация. Количество "
                    f"очков равно сумме всех кубиков.")
         if game.yahtzee:
             msg.append(f"{MOVE_ICONS['yh']} Яхтзи: Одинаковая цифра на всех "
