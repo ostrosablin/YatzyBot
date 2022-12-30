@@ -780,11 +780,11 @@ def bot_help(_, update):
         rolls_remark = ""
         if game.maxi:
             rolls_remark = " (не считая сохранённых перебросов)"
-        rounds = "пятнадцать"
+        rounds = "пятнадцати"
         if game.yahtzee:
-            rounds = "тринадцать"
+            rounds = "тринадцати"
         elif game.maxi:
-            rounds = "двадцать"
+            rounds = "двадцати"
         msg.append(f"{RULES} Цель игры состоит в том, чтобы набирать очки, "
                    f"бросая {dice_count} кубиков и собирая из них разные "
                    f"комбинации. Кубики можно бросать до трёх раз за "
