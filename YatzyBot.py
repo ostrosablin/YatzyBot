@@ -434,7 +434,7 @@ def roll_msg(update, game, player, dice):
     if not rerolllink:
         if len(options) == 1:
             movelink = f"{INFO} У вас не осталось перебросов и есть только " \
-                       f" один допустимый ход, ваш ход завершён " \
+                       f"один допустимый ход, ваш ход завершён " \
                        f"автоматически.\n\n"
             automove = MAP_COMMANDS[next(iter(options))]
     answer(
