@@ -764,7 +764,8 @@ def score_all(update, _):
 def bot_help(update, _):
     logger.info("Вызвана справка")
     game = get_game(update)
-    if not gamemanager.is_game_created(update.message.chat) or game.finished:
+    chat = update.message.chat
+    if not gamemanager.is_game_created(chat) or game.is_game_not_started():
         answer(
             update,
             f"{HELP} Используйте команду {START} /start чтобы начать работу "
