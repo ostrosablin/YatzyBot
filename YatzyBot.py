@@ -95,7 +95,8 @@ def answer(update, msg, parse_mode=None):
     if parse_mode is not None:
         kw['parse_mode'] = parse_mode
     update.message.reply_text(
-        msg, quote=False, **kw
+        msg, quote=False, message_thread_id=update.message.message_thread_id,
+        **kw
     )
 
 
