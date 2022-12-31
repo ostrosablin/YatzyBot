@@ -77,12 +77,25 @@ def dice_to_wildcard(game):
     return ' '.join(res)
 
 
+def auto_group(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        chat_id = 0
+        if "chat_id" in kwargs:
+            chat_id = kwargs["chat_id"]
+        elif len(args) > 0:
+            chat_id = args[0]
+        is_group = (chat_id < 0)
+        return method(self, *args, **kwargs, isgroup=is_group)
+    return wrapper
+
+
 def answer(update, msg, parse_mode=None):
     kw = {}
     if parse_mode is not None:
         kw['parse_mode'] = parse_mode
     update.message.reply_text(
-        msg, quote=False, isgroup=not is_private(update), **kw
+        msg, quote=False, **kw
     )
 
 
@@ -132,7 +145,7 @@ def _game_start_msg(update, turn_order_messages, game):
     answer(update, msg)
 
 
-def start(_, update):
+def start(update, _):
     logger.info(f"Start attempt - chat_id {update.message.chat.id}")
     game = get_game(update)
     if not gamemanager.is_game_created(update.message.chat) or game.finished:
@@ -166,7 +179,7 @@ def _game_created_msg(update, player, gamename):
     answer(update, msg)
 
 
-def startgame(_, update, yahtzee, forced=False, maxi=False):
+def startgame(update, yahtzee, forced=False, maxi=False):
     player = get_player(update)
     if yahtzee:
         gamename = "Yahtzee"
@@ -199,29 +212,29 @@ def startgame(_, update, yahtzee, forced=False, maxi=False):
     _game_created_msg(update, player, gamename)
 
 
-def startyahtzee(bot_instance, update):
-    startgame(bot_instance, update, True)
+def startyahtzee(update, _):
+    startgame(update, True)
 
 
-def startyatzy(bot_instance, update):
-    startgame(bot_instance, update, False)
+def startyatzy(update, _):
+    startgame(update, False)
 
 
-def startforcedyatzy(bot_instance, update):
-    startgame(bot_instance, update, False, True, False)
+def startforcedyatzy(update, _):
+    startgame(update, False, True, False)
 
 
-def startmaxiyatzy(bot_instance, update):
-    startgame(bot_instance, update, False, False, True)
+def startmaxiyatzy(update, _):
+    startgame(update, False, False, True)
 
 
-def startforcedmaxiyatzy(bot_instance, update):
-    startgame(bot_instance, update, False, True, True)
+def startforcedmaxiyatzy(update, _):
+    startgame(update, False, True, True)
 
 
 def chk_game_runs(func):
     @wraps(func)
-    def wrapper(_, update):
+    def wrapper(update, _):
         if not gamemanager.is_game_created(update.message.chat):
             answer(update, f"{ERROR} Game doesn't exist (try {START} /start).")
             return
@@ -231,7 +244,7 @@ def chk_game_runs(func):
                 f"{ERROR} Game is not running (try {START} /start)."
             )
             return
-        func(_, update)
+        func(update, _)
     return wrapper
 
 
@@ -242,7 +255,7 @@ def is_private(update):
 
 
 @chk_game_runs
-def stop(_, update):
+def stop(update, _):
     try:
         get_game(update).stop_game(get_player(update))
         logger.info(f"Stopped game - chat_id {update.message.chat.id}")
@@ -264,7 +277,7 @@ def owner_transfer_msg(update, oldowner, newowner):
 
 
 @chk_game_runs
-def kick(_, update):
+def kick(update, _):
     try:
         game = get_game(update)
         kicker = get_player(update)
@@ -291,7 +304,7 @@ def kick(_, update):
 
 def roster_check(func):
     @wraps(func)
-    def wrapper(_, update):
+    def wrapper(update, _):
         if not gamemanager.is_game_created(update.message.chat):
             answer(update, f"{ERROR} Game doesn't exist (try {START} /start).")
             return
@@ -302,12 +315,12 @@ def roster_check(func):
                 f"(try {START} /start)."
             )
             return
-        func(_, update)
+        func(update, _)
     return wrapper
 
 
 @roster_check
-def join(_, update):
+def join(update, _):
     player = get_player(update)
     try:
         get_game(update).add_player(player)
@@ -331,7 +344,7 @@ def join(_, update):
 
 
 @roster_check
-def leave(_, update):
+def leave(update, _):
     player = get_player(update)
     game = get_game(update)
     try:
@@ -432,7 +445,7 @@ def roll_msg(update, game, player, dice):
 
 
 @chk_game_runs
-def roll(_, update):
+def roll(update, _):
     game = get_game(update)
     player = get_player(update)
     try:
@@ -476,7 +489,7 @@ def reroll_msg(update, game, player, dice):
 
 
 @chk_game_runs
-def reroll(_, update):
+def reroll(update, _):
     game = get_game(update)
     player = get_player(update)
     try:
@@ -549,7 +562,7 @@ def quick_reroll_set(game, command):
 
 
 @chk_game_runs
-def reroll_process(_, update):
+def reroll_process(update, _):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
     args = update.message.text.strip().split(None)[1:]
     game = get_game(update)
@@ -589,7 +602,7 @@ def reroll_process(_, update):
 
 
 @chk_game_runs
-def commit(_, update):
+def commit(update, _):
     game = get_game(update)
     player = get_player(update)
     try:
@@ -666,7 +679,7 @@ def process_move(update, game, player, move):
 
 
 @chk_game_runs
-def commit_move(_, update):
+def commit_move(update, _):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
     game = get_game(update)
     player = get_player(update)
@@ -692,7 +705,7 @@ def scoreboard_msg(update, player):
 
 
 @chk_game_runs
-def score(_, update):
+def score(update, _):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
     if arg == "score":
         player = get_player(update)
@@ -725,11 +738,11 @@ def score_messages(update, player, finished):
 
 
 @chk_game_runs
-def score_all(_, update):
+def score_all(update, _):
     totalscore_msg(update)
 
 
-def bot_help(_, update):
+def bot_help(update, _):
     logger.info("Help invoked")
     game = get_game(update)
     if not gamemanager.is_game_created(update.message.chat) or game.finished:
@@ -906,9 +919,9 @@ def bot_help(_, update):
         )
 
 
-def error(_, update, err):
+def error(update, context):
     """Log Errors caused by Updates."""
-    logger.error('Update "%s" caused error "%s"', update, err)
+    logger.error('Update "%s" caused error "%s"', update, context.error)
 
 
 class MQBot(bot.Bot):
@@ -926,6 +939,7 @@ class MQBot(bot.Bot):
         except (ValueError, BaseException):
             pass
 
+    @auto_group
     @messagequeue.queuedmessage
     def send_message(self, *args, **kwargs):
         """Wrapped method would accept new `queued` and `isgroup`
