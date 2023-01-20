@@ -365,7 +365,7 @@ class Scoreboard(object):
                 if lost:
                     bonus = "Упущен"
                 elif remaining:
-                    bonus = f"ещё {remaining} очков"
+                    bonus = f"ещё {remaining}"
                 output.append(
                     [f"{bonus_value} очк. за ≥ {up_sec_bonus}", bonus]
                 )

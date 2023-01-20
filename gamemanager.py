@@ -19,7 +19,7 @@
 
 from time import time
 
-from const import ERROR, INACTIVITY_TIMEOUT
+from const import ERROR, STOP, INACTIVITY_TIMEOUT
 from error import PlayerError
 from game import Game, Player
 
@@ -38,6 +38,11 @@ class GameManager(object):
                     raise PlayerError(
                         f"{ERROR} Только владелец может делать это!"
                     )
+        if self.is_game_running(chat):
+            raise PlayerError(
+                f"{ERROR} Нельзя создать новую игру, пока активна предыдущая "
+                f"(попробуйте {STOP} /stop)."
+            )
         self.chats[chat.id] = Game(
             chat.id, self.player(owner), yahtzee, forced, maxi)
 
