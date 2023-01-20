@@ -392,42 +392,30 @@ def leave(update, _):
         current_turn_msg(update)
 
 
-def mk_movelink(options, compact=False):
+def mk_movelink(options, metrics, compact=False):
     movelink = []
     best_value = None
-    best_length = 0
     best_list = []
-    best_list_tail = []
-    fetchnext = False
-    for option in options:
+    for option in metrics:
         if best_value is None:
-            best_value = options[option]
-        if fetchnext and options[option]:
-            best_value = options[option]
-            fetchnext = False
-        if options[option] < best_value:
+            best_value = metrics[option]
+        if metrics[option] < best_value and metrics[option] <= 0.5:
             break
-        if not best_length and option == "Шанс":
-            fetchnext = True
-            target = best_list_tail
-        else:
-            target = best_list
-        best_length += 1
-        target.append(
+        best_list.append(
             f"{MOVE_BOX_ICONS[option]} /{MAP_COMMANDS[option]} "
             f"{option} - {options[option]} очков.\n\n"
         )
-    if len(options) != best_length:
+    if len(options) != len(best_list):
         movelink.append(f"{MOVE} /move - выбрать ход.\n\n")
         if not compact:
             movelink.append(
-                f"\n{BEST} {'Лучший ход' if best_length == 1 else 'Лучшие ходы'}"
+                f"\n{BEST} "
+                f"{'Лучший ход' if len(best_list) == 1 else 'Лучшие ходы'}"
                 f":\n\n"
             )
-            best_list_tail.append('\n')
-    if not compact or len(options) == best_length:
+            best_list.append('\n')
+    if not compact or len(options) == len(best_list):
         movelink.extend(best_list)
-        movelink.extend(best_list_tail)
     return "".join(movelink)
 
 
@@ -443,7 +431,8 @@ def roll_msg(update, game, player, dice):
     saved = get_extra_rerolls(game, player)
     rollnumber = game.reroll
     options = game.get_hand_score_options(player)
-    movelink = mk_movelink(options)
+    metrics = game.get_hand_score_options(player, True)
+    movelink = mk_movelink(options, metrics)
     automove = ""
     if not rerolllink:
         if len(options) == 1:
@@ -480,7 +469,9 @@ def reroll_msg(update, game, player, dice):
         sixth = f"{dice[5].to_emoji()} " \
                 f"/6 - Выбрать 6-ой кубик.\n\n"
     rollnumber = game.reroll
-    movelink = mk_movelink(game.get_hand_score_options(player), compact=True)
+    options = game.get_hand_score_options(player)
+    metrics = game.get_hand_score_options(player, True)
+    movelink = mk_movelink(options, metrics, compact=True)
     msg = (
         f"{ROLL} Меню переброса (Переброс {rollnumber}/2):\n\n"
         f"{dice_to_wildcard(game)}\n\n"

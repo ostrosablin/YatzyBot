@@ -51,56 +51,62 @@ class Scoreboard(object):
         self.forced = forced  # If True - play Forced Yahtzee variant
         self.maxi = maxi  # If True - play Maxi Yahtzee variant
         self.scores = {}
+        ndice = 6 if self.maxi else 5
         for player in self.players:
             boxes = [
                 Box(
-                    "Тузы" if yahtzee else "Единицы",
+                    "Тузы" if yahtzee else "Единицы", 1 * ndice,
                     lambda dice: Box.sum_particular_digits(dice, 1),
                     lambda dice: 0
                 ),
                 Box(
-                    "Двойки", lambda dice: Box.sum_particular_digits(dice, 2),
+                    "Двойки", 2 * ndice,
+                    lambda dice: Box.sum_particular_digits(dice, 2),
                     lambda dice: 0
                 ),
                 Box(
-                    "Тройки", lambda dice: Box.sum_particular_digits(dice, 3),
+                    "Тройки", 3 * ndice,
+                    lambda dice: Box.sum_particular_digits(dice, 3),
                     lambda dice: 0
                 ),
                 Box(
-                    "Четвёрки", lambda dice: Box.sum_particular_digits(dice, 4),
+                    "Четвёрки", 4 * ndice,
+                    lambda dice: Box.sum_particular_digits(dice, 4),
                     lambda dice: 0
                 ),
                 Box(
-                    "Пятёрки", lambda dice: Box.sum_particular_digits(dice, 5),
+                    "Пятёрки", 5 * ndice,
+                    lambda dice: Box.sum_particular_digits(dice, 5),
                     lambda dice: 0
                 ),
                 Box(
-                    "Шестёрки", lambda dice: Box.sum_particular_digits(dice, 6),
+                    "Шестёрки", 6 * ndice,
+                    lambda dice: Box.sum_particular_digits(dice, 6),
                     lambda dice: 0
                 ),
-                Box("Сумма Вер. Секц.", None, None, 0),
-                Box("Бонус Вер. Секц.", None, None, 0)]
+                Box("Сумма Вер. Секц.", 0, None, None, 0),
+                Box("Бонус Вер. Секц.", 0, None, None, 0)]
             if not yahtzee:
                 boxes.append(
-                    Box("Одна Пара", lambda dice: Box.groups(dice, [2])))
+                    Box("Одна Пара", 12, lambda dice: Box.groups(dice, [2])))
                 boxes.append(
-                    Box("Две Пары", lambda dice: Box.groups(dice, [2, 2])))
+                    Box("Две Пары", 22, lambda dice: Box.groups(dice, [2, 2])))
                 if self.maxi:
                     boxes.append(
                         Box(
-                            "Три Пары",
+                            "Три Пары", 30,
                             lambda dice: Box.groups(dice, [2, 2, 2])
                         )
                     )
             boxes.append(
                 Box(
-                    "3 Одинаковых",
+                    "3 Одинаковых", 30 if yahtzee else 18,
                     lambda dice: Box.sum_n_of_a_kind(dice, 3, yahtzee),
                     Box.chance)
             )
             boxes.append(
                 Box(
-                    "4 Одинаковых",
+                    "4 Одинаковых", 30 if yahtzee else 24,
                     lambda dice: Box.sum_n_of_a_kind(dice, 4, yahtzee),
                     Box.chance
                 )
@@ -108,28 +114,32 @@ class Scoreboard(object):
             if self.maxi:
                 boxes.append(
                     Box(
-                        "5 Одинаковых",
+                        "5 Одинаковых", 30,
                         lambda dice: Box.sum_n_of_a_kind(dice, 5, yahtzee)
                     )
                 )
-            boxes.append(Box("Фулл Хаус", lambda dice: Box.full_house(
-                dice, yahtzee), lambda dice: 25))
+            boxes.append(
+                Box(
+                    "Фулл Хаус", 25 if yahtzee else 28,
+                    lambda dice: Box.full_house(dice, yahtzee), lambda dice: 25
+                )
+            )
             if self.maxi:
                 boxes.append(
-                    Box("Замок", lambda dice: Box.groups(dice, [3, 3])))
+                    Box("Замок", 33, lambda dice: Box.groups(dice, [3, 3])))
                 boxes.append(
-                    Box("Башня", lambda dice: Box.groups(dice, [2, 4])))
+                    Box("Башня", 34, lambda dice: Box.groups(dice, [2, 4])))
             if yahtzee:
                 boxes.append(
                     Box(
-                        "Малый Стрит",
+                        "Малый Стрит", 30,
                         lambda dice: Box.straight_yahtzee(dice, 4),
                         lambda dice: 30
                     )
                 )
                 boxes.append(
                     Box(
-                        "Большой Стрит",
+                        "Большой Стрит", 40,
                         lambda dice: Box.straight_yahtzee(dice, 5),
                         lambda dice: 40
                     )
@@ -137,33 +147,34 @@ class Scoreboard(object):
             else:
                 boxes.append(
                     Box(
-                        "Малый Стрит",
+                        "Малый Стрит", 15,
                         lambda dice: Box.straight_yatzy(dice, 1, 5)
                     )
                 )
                 boxes.append(
                     Box(
-                        "Большой Стрит",
+                        "Большой Стрит", 20,
                         lambda dice: Box.straight_yatzy(dice, 2, 6)
                     )
                 )
                 if self.maxi:
                     boxes.append(
                         Box(
-                            "Полный Стрит",
+                            "Полный Стрит", 21,
                             lambda dice: Box.straight_yatzy(dice, 1, 6)
                         )
                     )
-            boxes.append(Box("Шанс", Box.chance))
+            boxes.append(Box("Шанс", 6 * ndice, Box.chance))
             if self.yahtzee:
-                boxes.append(Box("Яхтзи", Box.yatzy))
+                boxes.append(Box("Яхтзи", 50, Box.yatzy))
             else:
                 boxes.append(Box("Макси Йетзи" if self.maxi else "Йетзи",
+                                 100 if self.maxi else 50,
                                  lambda dice: Box.yatzy(dice, self.maxi)))
             if yahtzee:
-                boxes.append(Box("Бонус Яхтзи", None, None, 0))
-            boxes.append(Box("Сумма Ниж. Секц.", None, None, 0))
-            boxes.append(Box("Общая Сумма", None, None, 0))
+                boxes.append(Box("Бонус Яхтзи", 0, None, None, 0))
+            boxes.append(Box("Сумма Ниж. Секц.", 0, None, None, 0))
+            boxes.append(Box("Общая Сумма", 0, None, None, 0))
             self.scores[player] = OrderedDict(
                 [(box.name, box) for box in boxes])
 
@@ -255,26 +266,26 @@ class Scoreboard(object):
         self.scores[player]["Общая Сумма"].set_score(total)
         return bonus
 
-    def get_score_options(self, player, dice):
+    def get_score_options(self, player, dice, perf=False):
         """Get viable scoring options, sorted in descending order"""
         # Special Yahtzee rules
         if self.yahtzee:
             # If we have already scored a Yahtzee with >0
             if self.scores[player]["Яхтзи"].score:
                 # And if we're scored another valid Yahtzee
-                if self.scores[player]["Яхтзи"].preview_dice(dice):
+                if self.scores[player]["Яхтзи"].preview_dice(dice, perf):
                     # Try to get a corresponding upper section box:
                     box = list(self.scores[player].values())[int(dice[0]) - 1]
                     if box.score is None:
                         return OrderedDict(
-                            ((box.name, box.preview_dice(dice)),))
+                            ((box.name, box.preview_dice(dice, perf)),))
                     # If no free boxes - joker rules allow to use any of lower
                     # boxes
                     res = []
                     for box in list(self.scores[player].values())[8:15]:
                         if box.score is None:
                             res.append(
-                                (box.name, box.preview_joker_dice(dice)))
+                                (box.name, box.preview_joker_dice(dice, perf)))
                     if res:
                         return OrderedDict(
                             sorted(
@@ -285,13 +296,13 @@ class Scoreboard(object):
                     for box in list(self.scores[player].values())[:6]:
                         if box.score is None:
                             res.append(
-                                (box.name, box.preview_joker_dice(dice)))
+                                (box.name, box.preview_joker_dice(dice, perf)))
                     return OrderedDict(res)
         # Regular scoring options
         scores = []
         for box in self.scores[player].values():
             if box.score is None:
-                scores.append((box.name, box.preview_dice(dice)))
+                scores.append((box.name, box.preview_dice(dice, perf)))
                 if self.forced:
                     break  # In Forced Yatzy, we only give a first unfilled box
         return OrderedDict(sorted(scores, reverse=True, key=lambda x: x[1]))
@@ -420,9 +431,10 @@ class Scoreboard(object):
 class Box(object):
     """This represents a single scoreboard box"""
 
-    def __init__(self, name, rule, joker_rule=None, score=None):
+    def __init__(self, name, max_score, rule, joker_rule=None, score=None):
         self.name = name
         self.score = score
+        self.max_score = max_score
         self.rule = rule
         self.joker_rule = joker_rule
 
@@ -443,16 +455,22 @@ class Box(object):
             self.commit_dice(dice)
         return self.score
 
-    def preview_dice(self, dice):
+    def preview_dice(self, dice, perf=False):
         """Calculate, how much a hand will score in this box"""
-        return self.rule(dice)
+        if perf:
+            return self.rule(dice) / self.max_score
+        else:
+            return self.rule(dice)
 
-    def preview_joker_dice(self, dice):
+    def preview_joker_dice(self, dice, perf=False):
         """Calculate, how much a joker hand will score in this box"""
         if self.joker_rule is not None:
-            return self.joker_rule(dice)
+            if perf:
+                return self.joker_rule(dice) / self.max_score
+            else:
+                return self.joker_rule(dice)
         else:
-            return self.preview_dice(dice)
+            return self.preview_dice(dice, perf)
 
     @classmethod
     def sum_particular_digits(cls, dice, digit):

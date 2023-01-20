@@ -202,7 +202,7 @@ class Game(object):
         return self.hand
 
     @is_usable
-    def get_hand_score_options(self, player):
+    def get_hand_score_options(self, player, perf=False):
         """
         Get a list of possible ways to score your hand
         (in descending score order)
@@ -212,7 +212,7 @@ class Game(object):
                 f"{ERROR} Нельзя получить список ходов - вы ещё не бросили "
                 f"кубики (попробуйте {ROLL} /roll)."
             )
-        return self.scoreboard.get_score_options(player, self.hand)
+        return self.scoreboard.get_score_options(player, self.hand, perf)
 
     @is_usable
     def commit_turn(self, player, move):
