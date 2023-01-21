@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Timing constants
-INACTIVITY_TIMEOUT = 900
+INACTIVITY_TIMEOUT = 1800
 
 # General emojis
 WILDCARD_DICE = "*️⃣"
