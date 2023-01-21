@@ -717,10 +717,16 @@ def scoreboard_msg(update, player):
 @chk_game_runs
 def score(update, _):
     arg = update.message.text.strip()[1:].split(None)[0].split("@")[0]
+    requestor = get_player(update)
     if arg == "score":
-        player = get_player(update)
+        player = requestor
     else:
         player = None
+    try:
+        get_game(update).chk_command_usable_any_turn(requestor)
+    except PlayerError as e:
+        answer(update, str(e))
+        return
     scoreboard_msg(update, player)
 
 
@@ -749,6 +755,12 @@ def score_messages(update, player, finished):
 
 @chk_game_runs
 def score_all(update, _):
+    try:
+        player = get_player(update)
+        get_game(update).chk_command_usable_any_turn(player)
+    except PlayerError as e:
+        answer(update, str(e))
+        return
     totalscore_msg(update)
 
 
