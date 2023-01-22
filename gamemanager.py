@@ -17,9 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from time import time
-
-from const import ERROR, STOP, INACTIVITY_TIMEOUT
+from const import ERROR, STOP
 from error import PlayerError
 from game import Game, Player
 
@@ -34,8 +32,7 @@ class GameManager(object):
     def new_game(self, chat, owner, yahtzee, forced=False, maxi=False):
         if self.is_game_running(chat) or self.is_game_not_started(chat):
             if self.chats[chat.id].owner != self.player(owner):
-                if (time() - INACTIVITY_TIMEOUT) < self.chats[chat.id].last_op:
-                    raise PlayerError(f"{ERROR} Only owner can do that!")
+                raise PlayerError(f"{ERROR} Only owner can do that!")
         if self.is_game_running(chat):
             raise PlayerError(
                 f"{ERROR} Cannot start a new game while previous one is "
