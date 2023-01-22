@@ -458,9 +458,8 @@ class Game(object):
     @is_usable_any_turn
     def stop_game(self, player, completed=False):
         """Stop game"""
-        if (time() - self.last_op) < INACTIVITY_TIMEOUT:
-            if not completed and player != self.owner:
-                raise PlayerError(f"{ERROR} Только владелец может делать это!")
+        if not completed and player != self.owner:
+            raise PlayerError(f"{ERROR} Только владелец может делать это!")
         self.started = False
         self.finished = True
         self.last_op = 0
