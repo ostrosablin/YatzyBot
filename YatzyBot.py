@@ -258,13 +258,33 @@ def chk_game_runs(func):
     return wrapper
 
 
+def roster_check(func):
+    @wraps(func)
+    def wrapper(update, _):
+        if not gamemanager.is_game_created(update.message.chat):
+            answer(
+                update,
+                f"{ERROR} Игра не существует (попробуйте {START} /start)."
+            )
+            return
+        if get_game(update).finished:
+            answer(
+                update,
+                f"{ERROR} Эта игра уже окончена, создайте новую игру "
+                f"(попробуйте {START} /start)."
+            )
+            return
+        func(update, _)
+    return wrapper
+
+
 def is_private(update):
     if update.message.chat.type == 'private':
         return True
     return False
 
 
-@chk_game_runs
+@roster_check
 def stop(update, _):
     try:
         get_game(update).stop_game(get_player(update))
@@ -286,7 +306,7 @@ def owner_transfer_msg(update, oldowner, newowner):
         )
 
 
-@chk_game_runs
+@roster_check
 def kick(update, _):
     try:
         game = get_game(update)
@@ -294,10 +314,19 @@ def kick(update, _):
         oldowner = game.owner
         kicked = game.kick_player(kicker)
         kicked_msg = f"{kicker} выгнал {kicked} из игры"
-        if kicker == kicked:
+        if kicker == kicked or (kicked is None and kicker == oldowner):
             kicked_msg = f"{kicker} выгнал сам себя из игры"
+        elif kicked is None:
+            kicked_msg = f"{kicker} выгнал {oldowner} из игры"
         logger.info(f"{kicked_msg} - chat_id {update.message.chat.id}")
         answer(update, f"{KICK} {kicked_msg}.\n\n")
+        if kicked is None:
+            logger.info(
+                f"Игра отменена (выгнан владелец) - "
+                f"chat_id {update.message.chat.id}"
+            )
+            answer(update, f"{STOP} Владелец выгнан из игры, игра отменена.")
+            return
         owner_transfer_msg(update, oldowner, game.owner)
         if game.finished and not game.has_active_players():
             logger.info(
@@ -310,26 +339,6 @@ def kick(update, _):
         current_turn_msg(update)
     except PlayerError as e:
         answer(update, str(e))
-
-
-def roster_check(func):
-    @wraps(func)
-    def wrapper(update, _):
-        if not gamemanager.is_game_created(update.message.chat):
-            answer(
-                update,
-                f"{ERROR} Игра не существует (попробуйте {START} /start)."
-            )
-            return
-        if get_game(update).finished:
-            answer(
-                update,
-                f"{ERROR} Эта игра уже окончена, создайте новую игру "
-                f"(попробуйте {START} /start)."
-            )
-            return
-        func(update, _)
-    return wrapper
 
 
 @roster_check
