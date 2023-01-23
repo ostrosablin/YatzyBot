@@ -109,11 +109,11 @@ class Game(object):
 
     def del_player(self, player):
         """Remove a player"""
+        if player not in self.players:
+            raise PlayerError(f"{ERROR} You're not in game.")
         if self.started:
             self.leave_started(player)
             return
-        if player not in self.players:
-            raise PlayerError(f"{ERROR} You're not in game.")
         if player == self.owner:
             self.stop_game(player)
             raise PlayerError(
@@ -455,7 +455,6 @@ class Game(object):
         self.last_op = time()
         return turn_order_msgs
 
-    @is_usable_any_turn
     def stop_game(self, player, completed=False):
         """Stop game"""
         if not completed and player != self.owner:
@@ -465,15 +464,25 @@ class Game(object):
         self.last_op = 0
         self.players = []
 
-    @is_usable_any_turn
     def kick_player(self, player):
         """Kick current player"""
         kicked_player = self.get_current_player()
         selfkick = player == kicked_player
-        if (time() - self.last_op) < INACTIVITY_TIMEOUT:
+        inactivity = (time() - self.last_op)
+        remaining = max(INACTIVITY_TIMEOUT - inactivity, 0)
+        if inactivity < INACTIVITY_TIMEOUT:
             if not selfkick and player != self.owner:
-                raise PlayerError(f"{ERROR} Only owner can do this!")
-        self.leave_started(kicked_player)
+                timeout = f"{remaining // 60:02}:{remaining % 60:02}"
+                raise PlayerError(
+                    f"{ERROR} Only owner can do this (times out in {timeout})!"
+                )
+        if self.started:
+            self.leave_started(kicked_player)
+        else:
+            try:
+                self.del_player(self.owner)
+            except PlayerError:
+                pass
         self.last_op = time()
         return kicked_player
 
