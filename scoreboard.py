@@ -191,18 +191,30 @@ class Scoreboard(object):
                     return 100
         return 0
 
-    def get_upper_section_bonus_score(self):
+    @staticmethod
+    def get_upper_section_bonus_score_static(maxi, forced):
         """Calculate the score needed to get upper section bonus"""
         # Upper Section Bonus - if we score 63 or more in upper section
         # 84 or more for Maxi Yatzy
-        upper_section_bonus = 63 if not self.maxi else 84
-        if self.forced:
+        upper_section_bonus = 63 if not maxi else 84
+        if forced:
             # 42 for Forced Yatzy (63 for Forced Maxi Yatzy)
             upper_section_bonus -= 21
         return upper_section_bonus
 
+    def get_upper_section_bonus_score(self):
+        return Scoreboard.get_upper_section_bonus_score_static(
+            self.maxi, self.forced
+        )
+
+    @staticmethod
+    def get_upper_section_bonus_value_static(maxi, yahtzee):
+        return 35 if yahtzee else (50 if not maxi else 100)
+
     def get_upper_section_bonus_value(self):
-        return 35 if self.yahtzee else (50 if not self.maxi else 100)
+        return Scoreboard.get_upper_section_bonus_value_static(
+            self.maxi, self.yahtzee
+        )
 
     def award_upper_section_bonus(self, player):
         """Check if Upper Section Bonus is to be awarded and give it"""

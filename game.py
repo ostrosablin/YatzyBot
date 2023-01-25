@@ -496,10 +496,14 @@ class Game(object):
         return " ".join(name)
 
     def get_upper_section_bonus_score(self):
-        return self.scoreboard.get_upper_section_bonus_score()
+        return Scoreboard.get_upper_section_bonus_score_static(
+            self.maxi, self.forced
+        )
 
     def get_upper_section_bonus_value(self):
-        return self.scoreboard.get_upper_section_bonus_value()
+        return Scoreboard.get_upper_section_bonus_value_static(
+            self.maxi, self.yahtzee
+        )
 
 
 class Player(UserString):

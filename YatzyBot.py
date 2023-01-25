@@ -758,7 +758,7 @@ def bot_help(update, _):
     logger.info("Help invoked")
     game = get_game(update)
     chat = update.message.chat
-    if not gamemanager.is_game_created(chat) or game.is_game_not_started():
+    if not gamemanager.is_game_created(chat) or game.finished:
         answer(
             update,
             f"{HELP} Use {START} /start command to begin and follow the "
