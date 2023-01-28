@@ -472,7 +472,7 @@ class Game(object):
         remaining = max(INACTIVITY_TIMEOUT - inactivity, 0)
         if inactivity < INACTIVITY_TIMEOUT:
             if not selfkick and player != self.owner:
-                timeout = f"{remaining // 60:02}:{remaining % 60:02}"
+                timeout = f"{int(remaining // 60):02}:{int(remaining % 60):02}"
                 raise PlayerError(
                     f"{ERROR} Только владелец может делать это "
                     f"(таймаут через {timeout})!"
