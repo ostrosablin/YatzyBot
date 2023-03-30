@@ -19,6 +19,7 @@
 
 import logging
 from functools import wraps
+from time import time
 
 from telegram import ParseMode, bot
 from telegram.ext import Updater, CommandHandler, messagequeue
@@ -65,6 +66,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 gamemanager = GameManager()
+answer_timer = {}
 
 
 def dice_to_wildcard(game):
@@ -90,14 +92,24 @@ def auto_group(method):
     return wrapper
 
 
-def answer(update, msg, parse_mode=None):
-    kw = {}
+def answer(update, msg, parse_mode=None, delay=1.5):
+    kw = {
+        'quote': False, 'message_thread_id': update.message.message_thread_id
+    }
     if parse_mode is not None:
         kw['parse_mode'] = parse_mode
-    update.message.reply_text(
-        msg, quote=False, message_thread_id=update.message.message_thread_id,
-        **kw
+    chat = update.message.chat
+    current = time()
+    real_delay = max(answer_timer.get(chat, 0.0) - current, 0.0)
+    answer_timer[chat] = current + real_delay + delay
+    answer_timer["queue"].run_once(
+        answer_callback, real_delay, context=(update, msg, kw)
     )
+
+
+def answer_callback(context):
+    update, msg, kw = context.job.context
+    update.message.reply_text(msg, **kw)
 
 
 def get_game(update):
@@ -138,7 +150,7 @@ def _game_chooser_msg(update):
 
 def _game_start_msg(update, turn_order_messages, game):
     for msg in turn_order_messages:
-        answer(update, msg)
+        answer(update, msg, delay=5)
     msg = (
         f"{START} Игра началась!\n\n"
         f"{ROLL} /roll - бросить кубики.\n\n"
@@ -456,7 +468,7 @@ def roll_msg(update, game, player, dice):
         f"{rerolllink}{movelink}{saved}"
     )
     if automove:
-        process_move(update, game, player, automove)
+        process_move(update, game, player, automove, auto=True)
 
 
 @chk_game_runs
@@ -668,7 +680,7 @@ def current_turn_msg(update):
     )
 
 
-def move_msg(update, saved_rerolls, player, move, points):
+def move_msg(update, saved_rerolls, player, move, points, auto=False):
     acquired_extra = ""
     if saved_rerolls:
         acquired_extra = f"{INFO} +{saved_rerolls} переброс(а) сохранено"
@@ -676,11 +688,12 @@ def move_msg(update, saved_rerolls, player, move, points):
         update,
         f"{SCORED} {player} делает ход {MOVE_ICONS[move]} {MAP_TURNS[move]}"
         f" за {points} очков.\n\n"
-        f"{acquired_extra}"
+        f"{acquired_extra}",
+        delay=5 if auto else 1
     )
 
 
-def process_move(update, game, player, move):
+def process_move(update, game, player, move, auto=False):
     saved_rerolls = 0
     if game.maxi:
         saved_rerolls = (2 - game.reroll)
@@ -689,7 +702,7 @@ def process_move(update, game, player, move):
     except (PlayerError, IllegalMoveError) as e:
         answer(update, str(e))
         return
-    move_msg(update, saved_rerolls, player, move, score_pos)
+    move_msg(update, saved_rerolls, player, move, score_pos, auto)
     scoreboard_msg(update, player)
     if gamemanager.game(update.message.chat).is_completed():
         totalscore_msg(update, finished=True)
@@ -1050,6 +1063,10 @@ def main():
 
     # Start the Bot
     updater.start_polling()
+
+    # Get the job queue
+    answer_timer['queue'] = updater.job_queue
+    logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
     logger.info("YatzyBot запущен.")
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
