@@ -93,6 +93,7 @@ class Game(object):
         self.hand = None
         self.saved_rerolls = defaultdict(int)
         self.reroll = 0
+        self.turn = 1
         self.reroll_pool = []
         self.last_op = time()
 
@@ -166,6 +167,7 @@ class Game(object):
         self.current += 1
         if self.current == len(self.players):
             self.current = 0
+            self.turn += 1
         self.hand = None
         self.reroll_pool = []
         self.reroll = 0
@@ -505,6 +507,14 @@ class Game(object):
             self.maxi, self.yahtzee
         )
 
+    def get_max_turn_number(self):
+        if not self.yahtzee:
+            if self.maxi:
+                return 20
+            else:
+                return 15
+        return 13
+
 
 class Player(UserString):
     """Class for representing a player"""
@@ -516,6 +526,7 @@ class Player(UserString):
             name.append(user.last_name)
         if user.username:
             name.append(f"({user.username})")
+        self.id = user.id
         self.active = {}
         UserString.__init__(self, " ".join(name))
 

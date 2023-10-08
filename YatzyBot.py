@@ -650,14 +650,15 @@ def current_turn_msg(update):
     saved = get_extra_rerolls(game, player)
     answer(
         update,
-        f"{INFO} Current turn: "
-        f"{player}\n\n"
+        f"{INFO} Current turn ({game.turn}/{game.get_max_turn_number()}): "
+        f"<a href=\"tg://user?id={player.id}\">{player}</a>\n\n"
         f"Use {ROLL} /roll to roll dice.\n\n"
         f"Use {SCORE} /score to view your scoreboard.\n\n"
         f"Use {SCORE} /score_all to view everyone's scoreboards.\n\n"
         f"Use {SCORE_ALL} /score_total to view everyone's total score.\n\n"
         f"Use {HELP} /help to see help for this game variant.\n\n" 
-        f"{saved}"
+        f"{saved}",
+        parse_mode=ParseMode.HTML
     )
 
 
