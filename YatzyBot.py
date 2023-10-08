@@ -669,14 +669,15 @@ def current_turn_msg(update):
     saved = get_extra_rerolls(game, player)
     answer(
         update,
-        f"{INFO} Сейчас ходит: "
-        f"{player}\n\n"
+        f"{INFO} Сейчас ходит ({game.turn}/{game.get_max_turn_number()}): "
+        f"<a href=\"tg://user?id={player.id}\">{player}</a>\n\n"
         f"{ROLL} /roll - бросить кубики.\n\n"
         f"{SCORE} /score - посмотреть вашу таблицу очков.\n\n"
         f"{SCORE} /score_all - посмотреть таблицы очков всех игроков.\n\n"
         f"{SCORE_ALL} /score_total - посмотреть таблицу рейтинга.\n\n"
         f"{HELP} /help - правила для этого варианта игры.\n\n" 
-        f"{saved}"
+        f"{saved}",
+        parse_mode = ParseMode.HTML
     )
 
 
