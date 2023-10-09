@@ -151,15 +151,16 @@ def _game_chooser_msg(update):
 def _game_start_msg(update, turn_order_messages, game):
     for msg in turn_order_messages:
         answer(update, msg, delay=5)
+    player = gamemanager.current_turn(update.message.chat)
     msg = (
         f"{START} Игра началась!\n\n"
         f"{ROLL} /roll - бросить кубики.\n\n"
         f"{HELP} /help - правила варианта {game.get_name()}.\n\n"
         f"{STOP} /stop - остановить игру.\n\n"
-        f"Сейчас ходит: "
-        f"{gamemanager.current_turn(update.message.chat)}"
+        f"{INFO} Сейчас ходит ({game.turn}/{game.get_max_turn_number()}): "
+        f"<a href=\"tg://user?id={player.id}\">{player}</a>"
     )
-    answer(update, msg)
+    answer(update, msg, parse_mode=ParseMode.HTML)
 
 
 def start(update, _):
