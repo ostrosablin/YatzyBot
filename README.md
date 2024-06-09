@@ -7,7 +7,7 @@ Features:
 * Multiplayer group bot, allowing to play a game with friends.
 * Completely clickable controls style, can be played from both PC or smartphone comfortably, no typing necessary.
 
-To use the bot, clone the repo, install the dependencies, fill creds.py with your token and connection settings (proxy, etc) and run YatzyBot.py (Python 3).
+To use the bot, clone the repo, install the dependencies, fill creds.py with your token and run YatzyBot.py (Python 3).
 
 To play with a bot, add it to some group, then issue /start command. From there, you can select a game variant to play. Follow the instructions afterwards.
 
