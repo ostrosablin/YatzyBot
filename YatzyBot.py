@@ -86,7 +86,8 @@ def dice_to_wildcard(game):
 
 async def answer(update, msg, parse_mode=None, delay=1.5):
     kw = {
-        'quote': False, 'message_thread_id': update.message.message_thread_id
+        'do_quote': False,
+        'message_thread_id': update.message.message_thread_id
     }
     if parse_mode is not None:
         kw['parse_mode'] = parse_mode
